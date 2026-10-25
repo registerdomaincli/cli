@@ -38,7 +38,8 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 		fmt.Fprintf(out, "%s", i18n.T("order.confirm",
 			"Domain", quote.Domain,
 			"Years", quote.Years,
-			"Amount", formatMoney(quote.NetCents, quote.Currency)))
+			"Amount", formatMoney(quote.NetCents, quote.Currency),
+			"Total", formatMoney(quote.TotalCents, quote.Currency)))
 	}
 	if dryRun {
 		if !jsonFlag {

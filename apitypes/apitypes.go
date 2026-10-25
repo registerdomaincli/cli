@@ -63,7 +63,8 @@ type SearchResponse struct {
 
 // Quote is the real pre-order price returned by GET /v1/quote. NetCents is
 // the tax-exclusive charge (upstream price for the requested term plus
-// markup); VAT is added by Stripe at checkout.
+// markup). TaxCents is the VAT computed by the server from the buyer's
+// billing data; TotalCents is the exact amount charged at checkout.
 type Quote struct {
 	Domain        string  `json:"domain"`
 	Years         int     `json:"years"`
@@ -71,6 +72,8 @@ type Quote struct {
 	Premium       bool    `json:"premium"`
 	UpstreamPrice float64 `json:"upstreamPrice"`
 	NetCents      int64   `json:"netCents"`
+	TaxCents      int64   `json:"taxCents"`
+	TotalCents    int64   `json:"totalCents"`
 	Currency      string  `json:"currency"`
 }
 

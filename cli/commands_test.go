@@ -129,10 +129,7 @@ func TestRegisterDryRunPrintsQuote(t *testing.T) {
 	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/v1/quote":
-			_ = json.NewEncoder(w).Encode(apitypes.Quote{
-				Domain: "example.com", Years: 2, Kind: "registration",
-				NetCents: 1230, Currency: "EUR",
-			})
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{Domain: "example.com", Years: 2, Kind: "registration", NetCents: 1230, TaxCents: 258, TotalCents: 1488, Currency: "EUR"})
 		case r.URL.Path == "/v1/orders":
 			ordersCalled.Store(true)
 			w.WriteHeader(http.StatusCreated)
@@ -150,7 +147,7 @@ func TestRegisterDryRunPrintsQuote(t *testing.T) {
 		"--server", s.URL, "--token", "dcl_x",
 		"register", "example.com", "--years", "2", "--dry-run",
 	}, "")
-	if !strings.Contains(out, "example.com, 2 yr — €12.30 + VAT. Continue? [y/N]") {
+	if !strings.Contains(out, "example.com, 2 yr — €12.30 + VAT = €14.88. Continue? [y/N]") {
 		t.Errorf("confirm line missing or wrong:\n%s", out)
 	}
 	if !strings.Contains(out, "Dry run: no order was created.") {
@@ -176,10 +173,7 @@ func TestOrderPollTransitions(t *testing.T) {
 	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/v1/quote":
-			_ = json.NewEncoder(w).Encode(apitypes.Quote{
-				Domain: "example.com", Years: 1, Kind: "renewal",
-				NetCents: 900, Currency: "EUR",
-			})
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{Domain: "example.com", Years: 1, Kind: "renewal", NetCents: 900, TaxCents: 189, TotalCents: 1089, Currency: "EUR"})
 		case r.URL.Path == "/v1/orders" && r.Method == http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			_ = json.NewEncoder(w).Encode(apitypes.Order{ID: "o9", Status: "pending_payment"})
@@ -226,10 +220,7 @@ func TestRenewDeclineNonInteractive(t *testing.T) {
 	var ordered atomic.Bool
 	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/v1/quote" {
-			_ = json.NewEncoder(w).Encode(apitypes.Quote{
-				Domain: "example.com", Years: 1, Kind: "renewal",
-				NetCents: 900, Currency: "EUR",
-			})
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{Domain: "example.com", Years: 1, Kind: "renewal", NetCents: 900, TaxCents: 189, TotalCents: 1089, Currency: "EUR"})
 			return
 		}
 		if r.URL.Path == "/v1/orders" {
