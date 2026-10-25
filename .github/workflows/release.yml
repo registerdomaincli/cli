@@ -1,0 +1,64 @@
+# CLI release: matrix build on v* tags, sha256 checksums, GitHub release.
+# permissions: contents:write is REQUIRED — the default GITHUB_TOKEN is
+# read-only and release creation fails without it.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - {goos: linux, goarch: amd64}
+          - {goos: linux, goarch: arm64}
+          - {goos: darwin, goarch: amd64}
+          - {goos: darwin, goarch: arm64}
+          - {goos: windows, goarch: amd64}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          # The .exe suffix is decided in shell. An Actions expression here
+          # would not be shell syntax and fails with "bad substitution" - and
+          # GitHub evaluates expressions inside run blocks even in comments,
+          # so this comment must not contain one either.
+          EXT=""
+          if [ "$GOOS" = "windows" ]; then EXT=".exe"; fi
+          go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" \
+            -o "dist/domain-cli-${GOOS}-${GOARCH}${EXT}" ./cmd/domain-cli
+      - name: Windows zip (the landing-page PowerShell block downloads this)
+        if: matrix.goos == 'windows'
+        run: |
+          cd dist
+          zip "domain-cli-windows-amd64.zip" "domain-cli-windows-amd64.exe"
+      - name: Checksums
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          # One checksum file PER TARGET. Every matrix job uploads to the same
+          # release, so a shared `checksums.txt` would have each job overwrite
+          # the previous one and the release would ship a single line.
+          cd dist
+          for f in *; do sha256sum "$f" > "$f.sha256"; done
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+          generate_release_notes: true

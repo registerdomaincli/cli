@@ -1,0 +1,112 @@
+# The landing page serves two files from this repo verbatim: the install
+# script and the agent skill. The site itself lives in the private server
+# repo, which keeps its own copies under web/public/ — and those copies used
+# to be updated by hand, so they went stale the moment either file changed
+# here. This mirrors them across on every push that touches one.
+#
+# It opens a pull request instead of pushing to the server repo's main: these
+# files are what visitors curl into their shell and into their agent's skills
+# directory, so a human approves every change to them.
+name: sync-web-assets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - install.sh
+      - skills/domain-cli/SKILL.md
+  workflow_dispatch:
+
+env:
+  SERVER_REPO: agumaik/registerdomain-cli-server
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the CLI (source of truth)
+        uses: actions/checkout@v4
+        with:
+          path: cli
+
+      - name: Check out the server repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SERVER_REPO }}
+          # GITHUB_TOKEN is scoped to THIS repository, so it can neither read
+          # nor push to the private server repo. WEB_SYNC_TOKEN must be a PAT
+          # (or GitHub App token) with contents:write and pull-requests:write
+          # there. Without it this step fails with a 404 — that is what a
+          # permission error on a private repo looks like, not a typo in the
+          # repository name.
+          token: ${{ secrets.WEB_SYNC_TOKEN }}
+          path: server
+
+      - name: Copy the published files
+        run: |
+          set -euo pipefail
+
+          # Modes are part of the payload: install.sh stays executable, and
+          # `install -D` creates web/public/skill/ the first time. A source
+          # that no longer exists has its copy removed rather than left
+          # behind: a delete here reaches the `paths` filter too, and the
+          # site would otherwise go on serving a file this repo dropped.
+          mirror() {
+            if [ -f "cli/$1" ]; then
+              install -D -m "$3" "cli/$1" "server/$2"
+            elif [ -e "server/$2" ]; then
+              echo "cli/$1 is gone; removing server/$2"
+              rm -f "server/$2"
+            fi
+          }
+
+          mirror install.sh web/public/install.sh 755
+          mirror skills/domain-cli/SKILL.md web/public/skill/SKILL.md 644
+
+      - name: Open a pull request
+        working-directory: server
+        env:
+          GH_TOKEN: ${{ secrets.WEB_SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # `git status --porcelain`, not `git diff`: a file the server repo
+          # does not have yet lands as untracked, and git diff reports nothing
+          # for those — the first sync of a new asset would silently no-op.
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "web/public already matches ${GITHUB_SHA}; nothing to sync."
+            exit 0
+          fi
+
+          branch="sync/web-assets-${GITHUB_SHA:0:12}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add -A web/public
+          git commit \
+            -m "web: sync install.sh and the agent skill from the CLI" \
+            -m "Mirrored from ${GITHUB_REPOSITORY}@${GITHUB_SHA} by sync-web-assets."
+          # A re-run of the same commit (manual dispatch, a retry) lands on the
+          # branch it already created, so the push must be allowed to replace
+          # it. --force-with-lease would refuse: this ref is ours to own.
+          git push --force origin "$branch"
+
+          # Re-running must refresh the open pull request rather than fail on
+          # `gh pr create`, which errors when one already exists for the head.
+          if [ -n "$(gh pr list --repo "$SERVER_REPO" --head "$branch" --state open --json number --jq '.[].number')" ]; then
+            echo "Pull request for $branch is already open; the push above updated it."
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "$SERVER_REPO" \
+            --base main \
+            --head "$branch" \
+            --title "web: sync install.sh and the agent skill from the CLI" \
+            --body "$(printf '%s\n' \
+              "Mirrors the files the landing page serves verbatim, from ${GITHUB_REPOSITORY}@${GITHUB_SHA}." \
+              "" \
+              "- \`web/public/install.sh\` ← \`install.sh\`" \
+              "- \`web/public/skill/SKILL.md\` ← \`skills/domain-cli/SKILL.md\`" \
+              "" \
+              "Opened by the \`sync-web-assets\` workflow. Edit the originals in the CLI repo, never these copies.")"
