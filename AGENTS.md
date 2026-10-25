@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-`domain-cli` is the **public** half of RegisterDomainCLI: a Cobra-based Go CLI that searches, registers, renews and transfers domains and manages DNS, contacts and billing against a **private** HTTP backend (`~/Work/registerdomain-cli-server`). Module `github.com/registerdomaincli/cli`, Go 1.27, Apache-2.0.
+`domain-cli` is the public half of RegisterDomainCLI: a Cobra-based Go CLI that searches, registers, renews and transfers domains and manages DNS, contacts and billing against the RegisterDomainCLI HTTP backend. Module `github.com/registerdomaincli/cli`, Go 1.27, Apache-2.0.
 
 This repo holds only: the CLI, the shared wire contract (`apitypes/`), the agent skill, `install.sh`, and release CI. All pricing, registrar integration, Stripe and fiscal logic lives server-side (`README.md:22-27`).
 
@@ -41,7 +41,7 @@ Commands are grouped thematically, **not** one file per command: `cmd_account.go
 
 ## Development Commands
 
-`/home/adosaiguas/Work/go.work` sits **one level above** the repo and mounts the private server module, so `go env GOWORK` is non-empty locally. **Prefix every local `go` command with `GOWORK=off`** — otherwise you build a dependency graph CI does not have.
+If a `go.work` file exists one level above the repo (local developer setups that also mount other local modules), `go env GOWORK` is non-empty there. **Prefix local `go` commands with `GOWORK=off`** — otherwise you build a dependency graph CI does not have.
 
 ```sh
 # Exact CI gate (.github/workflows/ci.yml:19-22)
@@ -136,7 +136,7 @@ Env vars in play: `DOMAIN_CLI_SERVER_URL`, `DOMAIN_CLI_TOKEN`, `DOMAIN_CLI_ENV`,
 - Dependencies are deliberately minimal: `spf13/cobra`, `nicksnyder/go-i18n/v2`, `golang.org/x/text`, `golang.org/x/term` (kernel-backed terminal detection — `ModeCharDevice` is true for `/dev/null`, which is not a terminal). Release builds are `CGO_ENABLED=0 -trimpath -s -w` across `linux/{amd64,arm64}`, `darwin/{amd64,arm64}`, `windows/amd64`, so **no cgo dependency may be added**.
 - Release artifacts are `dist/domain-cli-<goos>-<goarch>` (+ `.exe`/`.zip` for Windows), each paired with its own `<asset>.sha256`. Per-asset checksums avoid matrix jobs racing to overwrite one aggregate file. `install.sh` fetches the platform binary and matching `.sha256`; keep those names synchronized with `.github/workflows/release.yml`.
 - `install.sh` is POSIX `/bin/sh` with `set -eu` (no `pipefail`, no bashisms, tab-indented). It has **no `VERSION` pin** and Windows is intentionally rejected with a pointer to the landing page.
-- `REGISTERDOMAINCLI_MVP_PLAN.md` is gitignored — present locally, absent from the public repo. Never cite it as readable by a contributor; where it disagrees with repo files (e.g. it says Go 1.25), **the repo wins**.
+- No project-wide planning documents are tracked in this repo: where local, untracked notes disagree with repo files, **the repo wins**.
 
 ## Testing & QA
 
