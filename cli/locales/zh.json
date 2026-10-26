@@ -65,7 +65,7 @@
   "confirm.prompt": "是否继续？[y/N] ",
   "confirm.aborted": "已取消。",
   "register.short": "注册新域名",
-  "register.long": "注册一个新域名。\n\n先显示准确价格并在创建订单前请求确认，然后在浏览器中打开结账页面\n并等待支付完成。\n\n注册人优先级：直接输入（--own-contact）优先，其次 --contact <标签>，\n再次为默认联系人集；如果您没有任何联系人集，系统会提示您输入，并\n询问是否将其保存为联系人集。",
+  "register.long": "注册一个或多个新域名。\n\n多个域名会合并为一张订单：一个结账页面、一次扣款、一张包含每个\n域名一行的发票。先显示确切价格并在创建订单前要求确认，然后在浏览\n器中打开结账页面并等待支付完成。\n\n注册人优先级：交互式输入（--own-contact）优先，其次 --contact <标签>，\n再次默认联系人集；若都没有，会要求填写并询问是否保存。",
   "renew.short": "续费域名",
   "renew.long": "将域名续费一年或多年。\n\n先显示准确价格并在创建订单前请求确认，然后在浏览器中打开结账页面\n并等待支付完成。",
   "transfer.short": "将域名转移到 RegisterDomainCLI",
@@ -205,5 +205,7 @@
   "tlds.long": "显示本账户可注册的所有 TLD，按用途分组（local、business、tech、shop、creative、org）。可用 --group 指定分组 slug，或把 TLD 传给 'search --tlds'。",
   "tlds.groupsHdr": "分组（配合 --group 使用，或用于挑选 --tlds 集合）：",
   "tlds.listHdr": "可注册的 TLD（{{.Count}} 个）：",
-  "tlds.filteredFooter": "已按分组“{{.Group}}”过滤。去掉 --group 可查看全部。"
+  "tlds.filteredFooter": "已按分组“{{.Group}}”过滤。去掉 --group 可查看全部。",
+  "order.confirmMulti": "{{.Domain}}，{{.Years}}年 — {{.Amount}}",
+  "order.confirmMultiTotal": "{{.Count}} 个域名 — {{.Amount}} + 增值税 = {{.Total}}。继续吗？[y/N] "
 }

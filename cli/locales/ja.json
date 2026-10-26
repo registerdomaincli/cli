@@ -65,7 +65,7 @@
   "confirm.prompt": "続行しますか？ [y/N] ",
   "confirm.aborted": "中止しました。",
   "register.short": "新しいドメインを登録",
-  "register.long": "新しいドメインを登録します。\n\n正確な価格を表示して注文作成前に確認を求め、その後ブラウザーで決済\nページを開き、支払いの完了を待ちます。\n\n登録者の優先順位: 直接入力（--own-contact）が最優先、次に\n--contact <ラベル>、次にデフォルトの連絡先セット。どちらもない場合は\n入力を求められ、連絡先セットとして保存するか尋ねられます。",
+  "register.long": "新しいドメインを1つ以上登録します。\n\n複数のドメインは1つの注文にまとまります：チェックアウトページ1つ、\n支払い1回、ドメインごとの明細行が1つの請求書。まず正確な価格を表示し、\n注文作成前に確認を求め、その後チェックアウトページをブラウザで開き、\n支払いの完了を待ちます。\n\n登録者の優先順位：対話入力（--own-contact）が最優先、次に\n--contact <ラベル>、次に既定の連絡先セット。どれもなければ入力を求め、\n保存するか尋ねます。",
   "renew.short": "ドメインを更新",
   "renew.long": "ドメインを 1 年以上更新します。\n\n正確な価格を表示して注文作成前に確認を求め、その後ブラウザーで決済\nページを開き、支払いの完了を待ちます。",
   "transfer.short": "ドメインを RegisterDomainCLI へ移管",
@@ -205,5 +205,7 @@
   "tlds.long": "このアカウントで登録できるすべてのTLDを目的別（local、business、tech、shop、creative、org）に分组して表示します。--groupでグループslugを指定するか、'search --tlds'にTLDを渡してください。",
   "tlds.groupsHdr": "グループ（--groupと併用、または--tldsセットの選択用）：",
   "tlds.listHdr": "登録可能なTLD（{{.Count}}件）：",
-  "tlds.filteredFooter": "グループ「{{.Group}}」で絞り込みました。--groupなしで実行すると全部見られます。"
+  "tlds.filteredFooter": "グループ「{{.Group}}」で絞り込みました。--groupなしで実行すると全部見られます。",
+  "order.confirmMulti": "{{.Domain}}、{{.Years}}年 — {{.Amount}}",
+  "order.confirmMultiTotal": "{{.Count}}ドメイン — {{.Amount}} + 消費税 = {{.Total}}。続行しますか？ [y/N] "
 }

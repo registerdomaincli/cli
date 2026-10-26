@@ -65,7 +65,7 @@
   "confirm.prompt": "Continuar? [y/N] ",
   "confirm.aborted": "Cancel·lat.",
   "register.short": "Registra un domini nou",
-  "register.long": "Registra un domini nou.\n\nMostra primer el preu exacte i demana confirmació abans de crear la\ncomanda; després obre la pàgina de pagament al navegador i espera que\nacabi el pagament.\n\nPrioritat del titular: l'entrada manual (--own-contact) té prioritat,\ndesprés --contact <etiqueta>, després el teu conjunt de contactes per\ndefecte; si no en tens cap, se't demanaran les dades i es t'oferirà\ndesar-les com a conjunt de contactes.",
+  "register.long": "Registra un o més dominis nous.\n\nAmb diversos dominis van en UNA comanda: una pàgina de pagament, un\ncobrament, una factura amb una línia per domini. Mostra el preu exacte\nprimer i demana confirmació abans de crear la comanda, després obre la\npàgina de pagament al navegador i espera que el pagament es completi.\n\nPrecedència del titular: un missatge interactiu (--own-contact) guanya,\ndesprés --contact <etiqueta>, després el conjunt de contactes per defecte;\nsi no en tens, se't demanen les dades i se t'ofereix desar-les.",
   "renew.short": "Renova un domini",
   "renew.long": "Renova un domini per un o més anys.\n\nMostra primer el preu exacte i demana confirmació abans de crear la\ncomanda; després obre la pàgina de pagament al navegador i espera que\nacabi el pagament.",
   "transfer.short": "Transfereix un domini a RegisterDomainCLI",
@@ -205,5 +205,7 @@
   "tlds.long": "Mostra tots els TLDs que aquest compte pot registrar, agrupats per intenció (local, business, tech, shop, creative, org). Fes servir un slug de grup amb --group, o passa TLDs a 'search --tlds'.",
   "tlds.groupsHdr": "Grups (fes-los servir amb --group o per triar conjunts de --tlds):",
   "tlds.listHdr": "TLDs venibles ({{.Count}}):",
-  "tlds.filteredFooter": "Filtrat al grup \"{{.Group}}\". Executa-ho sense --group per veure-ho tot."
+  "tlds.filteredFooter": "Filtrat al grup \"{{.Group}}\". Executa-ho sense --group per veure-ho tot.",
+  "order.confirmMulti": "{{.Domain}}, {{.Years}} any/s — {{.Amount}}",
+  "order.confirmMultiTotal": "{{.Count}} dominis — {{.Amount}} + IVA = {{.Total}}. Continuar? [s/N] "
 }

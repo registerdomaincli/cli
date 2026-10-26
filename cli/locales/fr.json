@@ -65,7 +65,7 @@
   "confirm.prompt": "Continuer ? [y/N] ",
   "confirm.aborted": "Abandonné.",
   "register.short": "Enregistrer un nouveau domaine",
-  "register.long": "Enregistre un nouveau domaine.\n\nAffiche d'abord le prix exact et demande confirmation avant de créer la\ncommande, puis ouvre la page de paiement dans votre navigateur et attend\nla fin du paiement.\n\nPriorité du titulaire : la saisie en ligne (--own-contact) l'emporte,\npuis --contact <libellé>, puis votre jeu de contacts par défaut ; si vous\nn'en avez aucun, il vous est demandé et vous pouvez l'enregistrer comme jeu\nde contacts.",
+  "register.long": "Enregistre un ou plusieurs nouveaux domaines.\n\nAvec plusieurs domaines, ils vont dans UNE seule commande : une page de\npaiement, un prélèvement, une facture avec une ligne par domaine. Le\nprix exact est affiché d'abord et une confirmation est demandée avant de\ncréer la commande, puis la page de paiement s'ouvre dans le navigateur\net attend la fin du paiement.\n\nPriorité du titulaire : la saisie interactive (--own-contact) gagne,\npuis --contact <label>, puis le jeu de contacts par défaut ; à défaut,\nles données sont demandées et la sauvegarde est proposée.",
   "renew.short": "Renouveler un domaine",
   "renew.long": "Renouvelle un domaine pour une ou plusieurs années.\n\nAffiche d'abord le prix exact et demande confirmation avant de créer la\ncommande, puis ouvre la page de paiement dans votre navigateur et attend\nla fin du paiement.",
   "transfer.short": "Transférer un domaine vers RegisterDomainCLI",
@@ -205,5 +205,7 @@
   "tlds.long": "Affiche tous les TLD que ce compte peut enregistrer, groupés par intention (local, business, tech, shop, creative, org). Utilisez un slug de groupe avec --group, ou passez des TLD à 'search --tlds'.",
   "tlds.groupsHdr": "Groupes (à utiliser avec --group ou pour choisir des ensembles --tlds) :",
   "tlds.listHdr": "TLD disponibles ({{.Count}}) :",
-  "tlds.filteredFooter": "Filtré sur le groupe « {{.Group}} ». Lancez sans --group pour tout voir."
+  "tlds.filteredFooter": "Filtré sur le groupe « {{.Group}} ». Lancez sans --group pour tout voir.",
+  "order.confirmMulti": "{{.Domain}}, {{.Years}} an — {{.Amount}}",
+  "order.confirmMultiTotal": "{{.Count}} domaines — {{.Amount}} + TVA = {{.Total}}. Continuer ? [o/N] "
 }

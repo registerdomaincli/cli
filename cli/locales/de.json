@@ -65,7 +65,7 @@
   "confirm.prompt": "Fortfahren? [y/N] ",
   "confirm.aborted": "Abgebrochen.",
   "register.short": "Neue Domain registrieren",
-  "register.long": "Registriert eine neue Domain.\n\nZeigt zuerst den genauen Preis an und fragt vor dem Aufgeben der\nBestellung nach Bestätigung, öffnet dann die Bezahlseite in Ihrem\nBrowser und wartet auf den Abschluss der Zahlung.\n\nInhaber-Priorität: die direkte Eingabe (--own-contact) hat Vorrang,\ndann --contact <Label>, dann Ihr Standard-Kontaktset; falls Sie keines\nhaben, werden Sie gefragt und können die Angaben als Kontaktset\nspeichern.",
+  "register.long": "Registriert eine oder mehrere neue Domains.\n\nBei mehreren Domains landen sie in EINER Bestellung: eine Checkout-Seite,\neine Zahlung, eine Rechnung mit einer Position pro Domain. Zuerst wird\nder genaue Preis angezeigt und vor der Bestellung eine Bestätigung\neingeholt; dann öffnet sich die Checkout-Seite im Browser und wartet auf\nden Abschluss.\n\nInhaber-Präferenz: die interaktive Eingabe (--own-contact) gewinnt,\ndann --contact <Label>, dann der Standard-Kontaktsatz; ohne beides\nwerden die Daten abgefragt und das Speichern angeboten.",
   "renew.short": "Domain verlängern",
   "renew.long": "Verlängert eine Domain um ein oder mehrere Jahre.\n\nZeigt zuerst den genauen Preis an und fragt vor dem Aufgeben der\nBestellung nach Bestätigung, öffnet dann die Bezahlseite in Ihrem\nBrowser und wartet auf den Abschluss der Zahlung.",
   "transfer.short": "Domain zu RegisterDomainCLI transferieren",
@@ -205,5 +205,7 @@
   "tlds.long": "Zeigt alle TLDs, die dieses Konto registrieren kann, nach Absicht gruppiert (local, business, tech, shop, creative, org). Verwenden Sie einen Gruppen-Slug mit --group oder übergeben Sie TLDs an 'search --tlds'.",
   "tlds.groupsHdr": "Gruppen (mit --group verwenden oder --tlds-Sets wählen):",
   "tlds.listHdr": "Verfügbare TLDs ({{.Count}}):",
-  "tlds.filteredFooter": "Auf Gruppe „{{.Group}}“ gefiltert. Ohne --group ausführen, um alles zu sehen."
+  "tlds.filteredFooter": "Auf Gruppe „{{.Group}}“ gefiltert. Ohne --group ausführen, um alles zu sehen.",
+  "order.confirmMulti": "{{.Domain}}, {{.Years}} J. — {{.Amount}}",
+  "order.confirmMultiTotal": "{{.Count}} Domains — {{.Amount}} + MwSt. = {{.Total}}. Fortfahren? [j/N] "
 }
