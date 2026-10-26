@@ -95,10 +95,17 @@ same account, same dcl_ token, same API:
 
 - **Endpoint**: `https://registerdomaincli.com/v1/mcp` (MCP over streamable
   HTTP, JSON-RPC; protocol version 2025-06-18).
-- **Auth**: every `tools/call` needs `Authorization: Bearer dcl_…` — the
-  token `signup`/`login` minted (the human reads it from the web panel or a
-  machine where the CLI is installed). `initialize` and `tools/list` are
-  public.
+- **Auth — prefer OAuth**: connector clients (Claude, Gemini) should run the
+  OAuth flow: a 401 from `tools/call` carries `WWW-Authenticate: Bearer
+  resource_metadata=…` → protected-resource metadata → authorization-server
+  metadata at
+  `https://registerdomaincli.com/.well-known/oauth-authorization-server/v1/mcp/oauth`
+  → dynamic client registration (`POST /v1/mcp/oauth/register`, public
+  client) → open `/v1/mcp/oauth/authorize` in the human's browser: they sign
+  in with email + the emailed 6-digit code (the same login as the CLI and
+  the panel) → exchange the code (PKCE S256) at `/v1/mcp/oauth/token`. The
+  access token is a normal dcl_ token. No token copying for the human.
+  A static `Authorization: Bearer dcl_…` header keeps working too.
 - **Tools** mirror the CLI: `whoami`, `search_domains`, `quote`,
   `create_order`, `list_orders`, `get_order`, `cancel_order`,
   `list_domains`, `get_domain`, `set_lock`, `set_autorenew`,
