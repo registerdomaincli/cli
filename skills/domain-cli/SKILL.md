@@ -16,6 +16,12 @@ contacts, and billing for domains the user owns there.
   [latest release](https://github.com/registerdomaincli/cli/releases/latest),
   unblock it, and add it to `PATH` (the landing page lists the same steps).
 - Fallback with Go toolchain: `go install github.com/registerdomaincli/cli/cmd/domain-cli@latest`
+- **Android (Termux)**: the static `linux/arm64` release binary runs as-is
+  inside Termux (`pkg install curl`, then the install command above, with
+  `~/.local/bin` on `PATH` for the fallback). No root needed. **iOS has no
+  local execution option** — there is no terminal app that can run the
+  binary; on phones without a real shell, use the hosted MCP server or the
+  web panel instead of `install.sh`.
 
 ## Agent contract (non-interactive use)
 
@@ -43,6 +49,15 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   or the full flag set (`--first-name --last-name --email --phone --address1
   --city --zip --country`, optional `--organization --address2 --state`);
   `--save-contact <label>` persists them for reuse.
+- **Billing profile & VAT** (before the first order for a new account): run
+  `domain-cli billing show`. When it prints "No billing profile saved", the
+  server bills from the domain's registrant contact and charges the default
+  VAT rate (no reverse charge / no exemption). Ask the human for their billing
+  data (legal name, address, and VAT/tax ID if any) and save them with
+  `domain-cli billing set` — for EU businesses a valid VAT ID makes the server
+  apply the reverse charge (0% VAT) instead of the domestic rate.
+  Quotes carry `netCents`/`taxCents`/`totalCents`: always confirm the
+  `totalCents` figure with the human before `--yes`.
 - **JSON output**: the global `--json` flag prints the API response object
   instead of the human table — prefer it for parsing.
 - **Currency**: pass the global `--currency <code>` (or `DOMAIN_CLI_CURRENCY`)
@@ -71,6 +86,35 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   stale binary when the task touches billing or DNS mutations; tell the
   user and proceed only on their word. `dev`/non-`v*` versions have no
   release line — skip the check.
+
+## No shell available? Use the MCP server
+
+Mobile agent apps (Claude, Gemini) and other environments without a real
+terminal cannot run `domain-cli`. Talk to the hosted MCP server instead —
+same account, same dcl_ token, same API:
+
+- **Endpoint**: `https://registerdomaincli.com/v1/mcp` (MCP over streamable
+  HTTP, JSON-RPC; protocol version 2025-06-18).
+- **Auth**: every `tools/call` needs `Authorization: Bearer dcl_…` — the
+  token `signup`/`login` minted (the human reads it from the web panel or a
+  machine where the CLI is installed). `initialize` and `tools/list` are
+  public.
+- **Tools** mirror the CLI: `whoami`, `search_domains`, `quote`,
+  `create_order`, `list_orders`, `get_order`, `cancel_order`,
+  `list_domains`, `get_domain`, `set_lock`, `set_autorenew`,
+  `get_auth_code`, `list_records`, `create_record`, `delete_record`,
+  `get_nameservers`, `set_nameservers`, `list_contact_sets`,
+  `create_contact_set`, `get_billing`, `set_billing`.
+- **confirm=true is the --yes of MCP**: `create_order`, `cancel_order`,
+  `delete_record`, `set_nameservers`, `get_auth_code` refuse without
+  `confirm: true`; `set_lock` needs it to unlock; `set_autorenew` needs it
+  to enable. Ask the human in chat first, exactly as with `--yes`.
+- **Payment is still human-only**: `create_order` returns `checkoutUrl`
+  plus a `hint` — give the URL to the human and stop. Never automate a
+  payment page, the billing portal, or invoices.
+- **Signup has no MCP shortcut**: the emailed 6-digit code must still be
+  typed by the human (CLI, web panel, or the `auth/signup` + `auth/verify`
+  REST pair from an environment the human controls).
 
 If `--server`/`DOMAIN_CLI_SERVER_URL` is unset interactively, the CLI prompts
 (defaults: `http://localhost:8080` in dev, `https://registerdomaincli.com` in
