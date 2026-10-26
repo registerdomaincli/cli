@@ -249,6 +249,8 @@ func NewRootCmd(version string) *cobra.Command {
 	root.AddCommand(newInvoiceCmd(app))
 	root.AddCommand(newContactsCmd(app))
 	root.AddCommand(newBillingCmd(app))
+	root.AddCommand(newTLDsCmd(app))
+	root.AddCommand(newRegisterCmd(app))
 	root.AddCommand(newLegalCmd(app))
 	root.AddCommand(newDomainsCmd(app))
 	root.AddCommand(newDNSCmd(app))
@@ -339,6 +341,19 @@ func printTable(w io.Writer, headers []string, rows [][]string) {
 		fmt.Fprintln(tw, strings.Join(row, "\t"))
 	}
 	_ = tw.Flush()
+}
+
+// printWrapped prints items as multi-column rows of at most perRow entries,
+// column width fixed for alignment. Used for the flat TLD list: it is meant
+// for eyeballing and grepping, not for per-row metadata.
+func printWrapped(w io.Writer, items []string, perRow int) {
+	for start := 0; start < len(items); start += perRow {
+		end := start + perRow
+		if end > len(items) {
+			end = len(items)
+		}
+		fmt.Fprintln(w, "  "+strings.Join(items[start:end], "  "))
+	}
 }
 
 // yesNo renders a boolean table cell in the active locale.

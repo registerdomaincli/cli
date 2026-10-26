@@ -200,5 +200,10 @@
   "err.exactArgs": "{{.Cmd}} को ठीक {{.N}} तर्क चाहिए।",
   "err.minArgs": "{{.Cmd}} को कम से कम {{.N}} तर्क चाहिए।",
   "err.rangeArgs": "{{.Cmd}} को {{.Min}} से {{.Max}} तर्क चाहिए।",
-  "err.missingFlags": "आवश्यक फ़्लैग गायम हैं: {{.Flags}}"
+  "err.missingFlags": "आवश्यक फ़्लैग गायम हैं: {{.Flags}}",
+  "tlds.short": "TLD कैटलॉग और उसके समूह सूचीबद्ध करें",
+  "tlds.long": "इस खाते द्वारा रजिस्टर किए जा सकने वाले सभी TLD दिखाता है, उद्देश्य के अनुसार समूहित (local, business, tech, shop, creative, org)। --group के साथ ग्रुप स्लग उपयोग करें, या 'search --tlds' को TLD पास करें।",
+  "tlds.groupsHdr": "समूह (--group के साथ उपयोग करें या --tlds सेट चुनने के लिए):",
+  "tlds.listHdr": "उपलब्ध TLD ({{.Count}}):",
+  "tlds.filteredFooter": "समूह \"{{.Group}}\" पर फ़िल्टर किया गया। सब देखने के लिए --group के बिना चलाएँ।"
 }

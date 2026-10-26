@@ -115,7 +115,7 @@ func TestRateLimitedRetryAfter(t *testing.T) {
 		w.WriteHeader(http.StatusTooManyRequests)
 	})
 	c := NewClient(s.URL, "dcl_x", "en")
-	_, err := c.Search("acme", "")
+	_, err := c.Search("acme", "", nil, 0)
 	rl, ok := err.(*RateLimitedError)
 	if !ok {
 		t.Fatalf("expected *RateLimitedError, got %T: %v", err, err)

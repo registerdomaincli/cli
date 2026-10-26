@@ -200,5 +200,10 @@
   "err.exactArgs": "{{.Cmd}} には引数がちょうど {{.N}} 個必要です。",
   "err.minArgs": "{{.Cmd}} には引数が少なくとも {{.N}} 個必要です。",
   "err.rangeArgs": "{{.Cmd}} には {{.Min}}〜{{.Max}} 個の引数が必要です。",
-  "err.missingFlags": "必須フラグがありません: {{.Flags}}"
+  "err.missingFlags": "必須フラグがありません: {{.Flags}}",
+  "tlds.short": "TLDカタログとグループを一覧表示",
+  "tlds.long": "このアカウントで登録できるすべてのTLDを目的別（local、business、tech、shop、creative、org）に分组して表示します。--groupでグループslugを指定するか、'search --tlds'にTLDを渡してください。",
+  "tlds.groupsHdr": "グループ（--groupと併用、または--tldsセットの選択用）：",
+  "tlds.listHdr": "登録可能なTLD（{{.Count}}件）：",
+  "tlds.filteredFooter": "グループ「{{.Group}}」で絞り込みました。--groupなしで実行すると全部見られます。"
 }

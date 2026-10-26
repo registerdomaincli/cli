@@ -15,14 +15,16 @@ domain-cli signup                  # email + 6-digit code from your inbox
 domain-cli login                   # same flow, for an account you already have
 domain-cli account list            # saved sign-ins; `account switch` moves between them
 domain-cli logout                  # revoke this machine's token
-domain-cli search mybrand          # keyword search across TLDs
-domain-cli register mybrand.com    # quote, checkout, registration
+domain-cli search mybrand                        # keyword search across TLDs
+domain-cli search mybrand --tlds cat,gal,eus     # restrict to specific TLDs
+domain-cli tlds                                  # catalog: sellable TLDs + intent groups
+domain-cli register mybrand.com                  # quote, checkout, registration
 domain-cli dns set mybrand.com A @ 203.0.113.10
 ```
 
 `domain-cli --help` lists every command (`signup`, `login`, `logout`, `whoami`,
-`account`, `search`, `register`, `renew`, `transfer`, `orders`, `invoice`,
-`contacts`, `billing`, `domains`, `dns`, `legal`).
+`account`, `search`, `tlds`, `register`, `renew`, `transfer`, `orders`,
+`invoice`, `contacts`, `billing`, `domains`, `dns`, `legal`).
 
 After each successful command the CLI compares its version against the latest
 GitHub release (at most once every 24 hours, result cached in the config

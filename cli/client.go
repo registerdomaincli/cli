@@ -151,10 +151,30 @@ func (c *Client) Logout() error {
 
 // Search runs a keyword or FQDN availability search. currency (ISO 4217,
 // lowercase) is forwarded so the server converts its indicative prices;
-// empty means the server's default billing currency.
-func (c *Client) Search(query, currency string) (apitypes.SearchResponse, error) {
+// empty means the server's default billing currency. tlds optionally
+// restricts the result to those TLDs (empty = no filter); limit caps the
+// rows returned (0 = server default).
+func (c *Client) Search(query, currency string, tlds []string, limit int) (apitypes.SearchResponse, error) {
 	var out apitypes.SearchResponse
-	err := c.do(http.MethodPost, "/v1/domains/search", apitypes.SearchRequest{Query: query, Currency: currency}, &out)
+	err := c.do(http.MethodPost, "/v1/domains/search", apitypes.SearchRequest{
+		Query:    query,
+		Currency: currency,
+		TLDs:     tlds,
+		Limit:    limit,
+	}, &out)
+	return out, err
+}
+
+// TLDs fetches the server's TLD catalog: the curated group menu and the
+// sellable TLDs with their group memberships. group filters the rows to one
+// group slug; empty returns everything.
+func (c *Client) TLDs(group string) (apitypes.TldCatalog, error) {
+	var out apitypes.TldCatalog
+	path := "/v1/tlds"
+	if group != "" {
+		path += "?group=" + url.QueryEscape(group)
+	}
+	err := c.do(http.MethodGet, path, nil, &out)
 	return out, err
 }
 
