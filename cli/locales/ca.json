@@ -200,5 +200,10 @@
   "err.exactArgs": "{{.Cmd}} requereix exactament {{.N}} argument(s).",
   "err.minArgs": "{{.Cmd}} requereix com a mínim {{.N}} argument(s).",
   "err.rangeArgs": "{{.Cmd}} requereix entre {{.Min}} i {{.Max}} argument(s).",
-  "err.missingFlags": "manquen els flags obligatoris: {{.Flags}}"
+  "err.missingFlags": "manquen els flags obligatoris: {{.Flags}}",
+  "tlds.short": "Llista el catàleg de TLDs i els seus grups",
+  "tlds.long": "Mostra tots els TLDs que aquest compte pot registrar, agrupats per intenció (local, business, tech, shop, creative, org). Fes servir un slug de grup amb --group, o passa TLDs a 'search --tlds'.",
+  "tlds.groupsHdr": "Grups (fes-los servir amb --group o per triar conjunts de --tlds):",
+  "tlds.listHdr": "TLDs venibles ({{.Count}}):",
+  "tlds.filteredFooter": "Filtrat al grup \"{{.Group}}\". Executa-ho sense --group per veure-ho tot."
 }

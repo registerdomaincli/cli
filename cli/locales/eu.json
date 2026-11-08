@@ -200,5 +200,10 @@
   "err.exactArgs": "{{.Cmd}} komandoak zehazki {{.N}} argumentu behar ditu.",
   "err.minArgs": "{{.Cmd}} komandoak gutxienez {{.N}} argumentu behar ditu.",
   "err.rangeArgs": "{{.Cmd}} komandoak {{.Min}} eta {{.Max}} arteko argumentu kopurua behar du.",
-  "err.missingFlags": "beharrezko aukerak falta dira: {{.Flags}}"
+  "err.missingFlags": "beharrezko aukerak falta dira: {{.Flags}}",
+  "tlds.short": "TLD katalogoa eta bere taldeak zerrendatzen ditu",
+  "tlds.long": "Kontu honek erregistratu ditzakeen TLD guztiak erakusten ditu, borondatearen arabera talkatuta (local, business, tech, shop, creative, org). Erabili talde slug bat --group-ekin, edo eman TLDak 'search --tlds'-i.",
+  "tlds.groupsHdr": "Taldeak (--group-ekin erabili edo --tlds multzoak aukeratzeko):",
+  "tlds.listHdr": "Salgai dauden TLDak ({{.Count}}):",
+  "tlds.filteredFooter": "\"{{.Group}}\" taldera iragazita. Exekutatu --group gabe dena ikusteko."
 }

@@ -200,5 +200,10 @@
   "err.exactArgs": "{{.Cmd}} benötigt genau {{.N}} Argument(e).",
   "err.minArgs": "{{.Cmd}} benötigt mindestens {{.N}} Argument(e).",
   "err.rangeArgs": "{{.Cmd}} benötigt zwischen {{.Min}} und {{.Max}} Argument(e).",
-  "err.missingFlags": "fehlende Pflicht-Flags: {{.Flags}}"
+  "err.missingFlags": "fehlende Pflicht-Flags: {{.Flags}}",
+  "tlds.short": "Listet den TLD-Katalog und seine Gruppen auf",
+  "tlds.long": "Zeigt alle TLDs, die dieses Konto registrieren kann, nach Absicht gruppiert (local, business, tech, shop, creative, org). Verwenden Sie einen Gruppen-Slug mit --group oder übergeben Sie TLDs an 'search --tlds'.",
+  "tlds.groupsHdr": "Gruppen (mit --group verwenden oder --tlds-Sets wählen):",
+  "tlds.listHdr": "Verfügbare TLDs ({{.Count}}):",
+  "tlds.filteredFooter": "Auf Gruppe „{{.Group}}“ gefiltert. Ohne --group ausführen, um alles zu sehen."
 }

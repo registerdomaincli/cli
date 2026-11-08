@@ -13,7 +13,7 @@ This repo holds only: the CLI, the shared wire contract (`apitypes/`), the agent
 ```
 main.go ──> NewRootCmd ──> PersistentPreRunE: Load() config + env + flags
                              ──> *App{Server, Token, Client, p *prompter}
-                          ──> 16 explicit root.AddCommand(newXxxCmd(app))
+                          ──> 17 explicit root.AddCommand(newXxxCmd(app))
 RunE ──> app.requireClient() ──> Client.<Endpoint>() ──> Client.do() ──> /v1 JSON
      ──> fail(err) ──> emitJSON(--json) | i18n.T(...) to cmd.OutOrStdout()
 ```
@@ -37,7 +37,7 @@ RunE ──> app.requireClient() ──> Client.<Endpoint>() ──> Client.do()
 | `skills/domain-cli/` | Agent-facing usage contract (`SKILL.md`) |
 | `.github/workflows/` | `ci.yml` (build/vet/test), `release.yml` (5-target tag release) |
 
-Commands are grouped thematically, **not** one file per command: `cmd_account.go` (signup/login/logout/whoami/account), `cmd_order.go` (register/renew/transfer/orders/invoice), `cmd_domains.go` (legal/domains/dns), `cmd_contacts.go` (contacts/billing), `cmd_search.go`.
+Commands are grouped thematically, **not** one file per command: `cmd_account.go` (signup/login/logout/whoami/account), `cmd_order.go` (register/renew/transfer/orders/invoice), `cmd_domains.go` (legal/domains/dns), `cmd_contacts.go` (contacts/billing), `cmd_search.go` (search/tlds).
 
 ## Development Commands
 

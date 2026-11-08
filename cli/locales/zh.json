@@ -200,5 +200,10 @@
   "err.exactArgs": "{{.Cmd}} 需要 {{.N}} 个参数。",
   "err.minArgs": "{{.Cmd}} 至少需要 {{.N}} 个参数。",
   "err.rangeArgs": "{{.Cmd}} 需要 {{.Min}} 到 {{.Max}} 个参数。",
-  "err.missingFlags": "缺少必需的参数：{{.Flags}}"
+  "err.missingFlags": "缺少必需的参数：{{.Flags}}",
+  "tlds.short": "列出 TLD 目录及其分组",
+  "tlds.long": "显示本账户可注册的所有 TLD，按用途分组（local、business、tech、shop、creative、org）。可用 --group 指定分组 slug，或把 TLD 传给 'search --tlds'。",
+  "tlds.groupsHdr": "分组（配合 --group 使用，或用于挑选 --tlds 集合）：",
+  "tlds.listHdr": "可注册的 TLD（{{.Count}} 个）：",
+  "tlds.filteredFooter": "已按分组“{{.Group}}”过滤。去掉 --group 可查看全部。"
 }

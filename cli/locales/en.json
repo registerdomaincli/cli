@@ -200,5 +200,10 @@
   "err.exactArgs": "{{.Cmd}} requires exactly {{.N}} argument(s).",
   "err.minArgs": "{{.Cmd}} requires at least {{.N}} argument(s).",
   "err.rangeArgs": "{{.Cmd}} requires between {{.Min}} and {{.Max}} argument(s).",
-  "err.missingFlags": "missing required flag(s): {{.Flags}}"
+  "err.missingFlags": "missing required flag(s): {{.Flags}}",
+  "tlds.short": "List the TLD catalog and its curated groups",
+  "tlds.long": "Shows every TLD this account can register, grouped by intent (local, business, tech, shop, creative, org). Use a group slug with --group, or pass TLDs to 'search --tlds'.",
+  "tlds.groupsHdr": "Groups (use with --group or to pick --tlds sets):",
+  "tlds.listHdr": "Sellable TLDs ({{.Count}}):",
+  "tlds.filteredFooter": "Filtered to group \"{{.Group}}\". Run without --group to see everything."
 }

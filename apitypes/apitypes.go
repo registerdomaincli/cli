@@ -34,9 +34,38 @@ type Me struct {
 // SearchRequest is the body of POST /v1/domains/search. A query containing a
 // dot is treated as an FQDN availability check, anything else as a keyword
 // search.
+//
+// TLDs optionally restricts the result to those TLDs (no leading dot,
+// "com" not ".com"); empty means no filter, the historical behavior. Limit
+// caps the number of rows returned; 0 means the server default (50), which
+// is also the ceiling.
 type SearchRequest struct {
-	Query    string `json:"query"`
-	Currency string `json:"currency,omitempty"` // ISO 4217, lowercase; empty = server default
+	Query    string   `json:"query"`
+	Currency string   `json:"currency,omitempty"` // ISO 4217, lowercase; empty = server default
+	TLDs     []string `json:"tlds,omitempty"`
+	Limit    int      `json:"limit,omitempty"`
+}
+
+// TldCatalog is the response of GET /v1/tlds. It is self-describing: Groups
+// lists the curated groups and every TLD row carries the group slugs it
+// belongs to, so one request gives an agent both the menu of groups and the
+// concrete TLDs to filter with.
+type TldCatalog struct {
+	Groups []TldGroup `json:"groups"`
+	TLDs   []TldEntry `json:"tlds"`
+}
+
+// TldGroup is one curated intent group ("local", "business", …).
+type TldGroup struct {
+	Slug        string `json:"slug"`        // stable identifier for ?group= filtering
+	Label       string `json:"label"`       // short human label (English)
+	Description string `json:"description"` // one-line explanation (English)
+}
+
+// TldEntry is one sellable TLD with its curated group memberships.
+type TldEntry struct {
+	TLD    string   `json:"tld"`    // no leading dot: "com", "cat"
+	Groups []string `json:"groups"` // group slugs, alphabetical; may be empty
 }
 
 // SearchResult is one availability row.

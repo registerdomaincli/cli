@@ -131,7 +131,8 @@ production).
 
 | Command | What it does |
 |---|---|
-| `domain-cli search <query>` | Keyword search, or FQDN check when the query contains a dot. Prices are indicative; exact charge appears at `register`/`renew`/`transfer` confirm time. |
+| `domain-cli search <query> [--tlds com,net,...] [--limit N]` | Keyword search, or FQDN check when the query contains a dot. `--tlds` restricts the result to those TLDs (≤50, run `tlds` to see the catalog); `--limit` caps rows (default and ceiling 50). Prices are indicative; exact charge appears at `register`/`renew`/`transfer` confirm time. |
+| `domain-cli tlds [--group <slug>]` | List every sellable TLD with its curated intent groups (`local`, `business`, `tech`, `shop`, `creative`, `org`). `--group` filters the list. Use it to translate "domains in the user's region" into an exact `--tlds` set. |
 | `domain-cli register <domain> [--years N] [--own-contact \| --contact <label>] [--dry-run]` | Quote → confirm → order → checkout in the human's browser → polls until paid/failed. Prompts for registrant when no default contact set exists; offers to save it. |
 | `domain-cli renew <domain> [--years N]` | Same flow with `kind=renewal`. |
 | `domain-cli transfer <domain> --auth-code <code> [--contact <label>] [--own-contact]` | Same flow with `kind=transfer`. Transfers take up to 7 days; watch `domain-cli orders`. |
@@ -241,10 +242,13 @@ print(server)
 PY
 )
 
-# Search
+# Search — optionally restricted to TLDs and capped
 curl -sS -X POST "$BASE/v1/domains/search" \
   -H @"$HDR" -H "Content-Type: application/json" \
-  -d '{"query":"example"}'
+  -d '{"query":"example","tlds":["com","net","org"],"limit":50}'
+
+# TLD catalog: curated groups + sellable TLDs (?group=<slug> filters)
+curl -sS "$BASE/v1/tlds" -H @"$HDR"
 
 # Quote (exact pre-order price; years ignored for transfers)
 curl -sS "$BASE/v1/quote?domain=example.com&years=1&kind=registration" -H @"$HDR"
