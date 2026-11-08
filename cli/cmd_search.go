@@ -85,7 +85,7 @@ func newTLDsCmd(app *App) *cobra.Command {
 		Use:   "tlds",
 		Short: i18n.T("tlds.short"),
 		Long:  i18n.T("tlds.long"),
-		Args:  cobra.NoArgs,
+		Args:  exactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := app.requireClient()
 			if err != nil {

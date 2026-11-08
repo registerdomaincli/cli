@@ -250,7 +250,6 @@ func NewRootCmd(version string) *cobra.Command {
 	root.AddCommand(newContactsCmd(app))
 	root.AddCommand(newBillingCmd(app))
 	root.AddCommand(newTLDsCmd(app))
-	root.AddCommand(newRegisterCmd(app))
 	root.AddCommand(newLegalCmd(app))
 	root.AddCommand(newDomainsCmd(app))
 	root.AddCommand(newDNSCmd(app))

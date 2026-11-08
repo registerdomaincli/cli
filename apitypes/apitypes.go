@@ -37,8 +37,8 @@ type Me struct {
 //
 // TLDs optionally restricts the result to those TLDs (no leading dot,
 // "com" not ".com"); empty means no filter, the historical behavior. Limit
-// caps the number of rows returned; 0 means the server default (20), values
-// above 50 are clamped.
+// caps the number of rows returned; 0 means the server default (50), which
+// is also the ceiling.
 type SearchRequest struct {
 	Query    string   `json:"query"`
 	Currency string   `json:"currency,omitempty"` // ISO 4217, lowercase; empty = server default
