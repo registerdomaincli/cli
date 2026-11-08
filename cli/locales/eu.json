@@ -208,5 +208,5 @@
   "tlds.filteredFooter": "\"{{.Group}}\" taldera iragazita. Exekutatu --group gabe dena ikusteko.",
   "order.confirmMulti": "{{.Domain}}, {{.Years}} urte — {{.Amount}}",
   "order.confirmMultiTotal": "{{.Count}} domeinu — {{.Amount}} + BEZ = {{.Total}}. Jarraitu? [y/N] ",
-  "err.quoteIncomplete": "Ezin izan da eskatutako domeinu bakoitza kotizatu. Ez da cobratu; saiatu berriro."
+  "err.quoteIncomplete": "Ezin izan da eskatutako domeinu bakoitza kotizatu. Ez da kobratu; saiatu berriro."
 }
