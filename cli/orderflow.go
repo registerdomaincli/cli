@@ -3,6 +3,7 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/registerdomaincli/cli/apitypes"
@@ -50,14 +51,23 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 		if err != nil {
 			return false, fail(err)
 		}
+		// SECURITY GATE: every requested item needs a matching quote with
+		// its domain, or the confirmation showed less than the order will
+		// charge. A partial/truncated response aborts BEFORE --yes.
+		if len(qr.Quotes) != len(req.Items) {
+			return false, errors.New(i18n.T("err.quoteIncomplete"))
+		}
+		for i := range req.Items {
+			if !strings.EqualFold(req.Items[i].Domain, qr.Quotes[i].Domain) {
+				return false, errors.New(i18n.T("err.quoteIncomplete"))
+			}
+		}
 		// The order must charge exactly what the confirmation displayed:
 		// echo the server's quoted term per domain (positional — the quote
 		// preserves request order), overriding the requested --years when
 		// the upstream price comes from a different term.
 		for i := range req.Items {
-			if i < len(qr.Quotes) {
-				req.Items[i].Years = qr.Quotes[i].Years
-			}
+			req.Items[i].Years = qr.Quotes[i].Years
 		}
 		if !jsonFlag {
 			for _, q := range qr.Quotes {

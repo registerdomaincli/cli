@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/registerdomaincli/cli/apitypes"
@@ -202,4 +203,54 @@ func lastJSONBlock(s string) string {
 		return s
 	}
 	return s[start+1:]
+}
+
+// TestRegisterMultiDryRunShowsTotals exercises the human (non-JSON) confirm
+// output: per-domain rows with quoted terms, the aggregate net/total, and
+// that --dry-run never creates an order.
+func TestRegisterMultiDryRunShowsTotals(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var ordersCalled atomic.Bool
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/quotes":
+			_ = json.NewEncoder(w).Encode(apitypes.QuoteResponse{
+				Quotes: []apitypes.Quote{
+					{Domain: "d1.com", Years: 2, NetCents: 2728, TotalCents: 3200, Currency: "EUR"},
+					{Domain: "d2.com", Years: 1, NetCents: 1181, TotalCents: 1400, Currency: "EUR"},
+				},
+				NetCents: 3909, TaxCents: 821, TotalCents: 4730, Currency: "EUR",
+			})
+		case "/v1/orders":
+			ordersCalled.Store(true)
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{ID: "o1"})
+		case "/v1/contact-sets", "/v1/me":
+			_ = json.NewEncoder(w).Encode(apitypes.ContactSetsResponse{})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	out := runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x",
+		"register", "d1.com", "d2.com", "--dry-run",
+	}, "")
+	if !strings.Contains(out, "d1.com, 2 yr — €27.28") {
+		t.Errorf("first quoted row missing or wrong:\n%s", out)
+	}
+	if !strings.Contains(out, "d2.com, 1 yr — €11.81") {
+		t.Errorf("second quoted row missing or wrong:\n%s", out)
+	}
+	if !strings.Contains(out, "2 domains — €39.09 + VAT = €47.30") {
+		t.Errorf("aggregate confirmation line missing or wrong:\n%s", out)
+	}
+	if !strings.Contains(out, "Dry run: no order was created.") {
+		t.Errorf("dry-run marker missing:\n%s", out)
+	}
+	if ordersCalled.Load() {
+		t.Error("--dry-run must not create an order")
+	}
 }

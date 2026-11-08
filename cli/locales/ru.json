@@ -207,5 +207,6 @@
   "tlds.listHdr": "Доступные TLD ({{.Count}}):",
   "tlds.filteredFooter": "Отфильтровано по группе \"{{.Group}}\". Запустите без --group, чтобы увидеть всё.",
   "order.confirmMulti": "{{.Domain}}, {{.Years}} г. — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} доменов — {{.Amount}} + НДС = {{.Total}}. Продолжить? [y/N] "
+  "order.confirmMultiTotal": "{{.Count}} доменов — {{.Amount}} + НДС = {{.Total}}. Продолжить? [y/N] ",
+  "err.quoteIncomplete": "Не удалось оценить каждый запрошенный домен. Списания не было; попробуйте снова."
 }

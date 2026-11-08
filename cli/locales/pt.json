@@ -207,5 +207,6 @@
   "tlds.listHdr": "TLDs disponíveis ({{.Count}}):",
   "tlds.filteredFooter": "Filtrado ao grupo \"{{.Group}}\". Execute sem --group para ver tudo.",
   "order.confirmMulti": "{{.Domain}}, {{.Years}} ano/s — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} domínios — {{.Amount}} + IVA = {{.Total}}. Continuar? [y/N] "
+  "order.confirmMultiTotal": "{{.Count}} domínios — {{.Amount}} + IVA = {{.Total}}. Continuar? [y/N] ",
+  "err.quoteIncomplete": "Não foi possível orçar cada domínio solicitado. Nada foi cobrado; tente novamente."
 }

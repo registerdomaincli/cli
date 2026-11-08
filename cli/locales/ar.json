@@ -207,5 +207,6 @@
   "tlds.listHdr": "النطاقات القابلة للتسجيل ({{.Count}}):",
   "tlds.filteredFooter": "تمت التصفية إلى المجموعة \"{{.Group}}\". شغّله بدون --group لرؤية الكل.",
   "order.confirmMulti": "{{.Domain}}، {{.Years}} سنة — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} نطاقات — {{.Amount}} + ضريبة القيمة المضافة = {{.Total}}. متابعة؟ [y/N] "
+  "order.confirmMultiTotal": "{{.Count}} نطاقات — {{.Amount}} + ضريبة القيمة المضافة = {{.Total}}. متابعة؟ [y/N] ",
+  "err.quoteIncomplete": "تعذّر تقدير سعر كل نطاق مطلوب. لم يتم خصم أي مبلغ؛ حاول مرة أخرى."
 }

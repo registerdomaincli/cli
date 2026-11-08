@@ -207,5 +207,6 @@
   "tlds.listHdr": "登録可能なTLD（{{.Count}}件）：",
   "tlds.filteredFooter": "グループ「{{.Group}}」で絞り込みました。--groupなしで実行すると全部見られます。",
   "order.confirmMulti": "{{.Domain}}、{{.Years}}年 — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}}ドメイン — {{.Amount}} + 消費税 = {{.Total}}。続行しますか？ [y/N] "
+  "order.confirmMultiTotal": "{{.Count}}ドメイン — {{.Amount}} + 消費税 = {{.Total}}。続行しますか？ [y/N] ",
+  "err.quoteIncomplete": "要求されたすべてのドメインの料金を見積もれませんでした。請求は発生していません。もう一度お試しください。"
 }

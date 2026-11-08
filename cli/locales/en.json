@@ -207,5 +207,6 @@
   "tlds.listHdr": "Sellable TLDs ({{.Count}}):",
   "tlds.filteredFooter": "Filtered to group \"{{.Group}}\". Run without --group to see everything.",
   "order.confirmMulti": "{{.Domain}}, {{.Years}} yr — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} domains — {{.Amount}} + VAT = {{.Total}}. Continue? [y/N] "
+  "order.confirmMultiTotal": "{{.Count}} domains — {{.Amount}} + VAT = {{.Total}}. Continue? [y/N] ",
+  "err.quoteIncomplete": "The price could not be quoted for every domain requested. Nothing was charged; try again."
 }

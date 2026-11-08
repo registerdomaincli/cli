@@ -207,5 +207,6 @@
   "tlds.listHdr": "可注册的 TLD（{{.Count}} 个）：",
   "tlds.filteredFooter": "已按分组“{{.Group}}”过滤。去掉 --group 可查看全部。",
   "order.confirmMulti": "{{.Domain}}，{{.Years}}年 — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} 个域名 — {{.Amount}} + 增值税 = {{.Total}}。继续吗？[y/N] "
+  "order.confirmMultiTotal": "{{.Count}} 个域名 — {{.Amount}} + 增值税 = {{.Total}}。继续吗？[y/N] ",
+  "err.quoteIncomplete": "无法为请求的每个域名报价。未产生任何费用；请重试。"
 }

@@ -207,5 +207,6 @@
   "tlds.listHdr": "TLD disponibles ({{.Count}}) :",
   "tlds.filteredFooter": "Filtré sur le groupe « {{.Group}} ». Lancez sans --group pour tout voir.",
   "order.confirmMulti": "{{.Domain}}, {{.Years}} an — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} domaines — {{.Amount}} + TVA = {{.Total}}. Continuer ? [y/N] "
+  "order.confirmMultiTotal": "{{.Count}} domaines — {{.Amount}} + TVA = {{.Total}}. Continuer ? [y/N] ",
+  "err.quoteIncomplete": "Impossible de chiffrer chaque domaine demandé. Rien n'a été facturé ; réessayez."
 }
