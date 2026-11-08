@@ -207,5 +207,5 @@
   "tlds.listHdr": "Salgai dauden TLDak ({{.Count}}):",
   "tlds.filteredFooter": "\"{{.Group}}\" taldera iragazita. Exekutatu --group gabe dena ikusteko.",
   "order.confirmMulti": "{{.Domain}}, {{.Years}} urte — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} domeinu — {{.Amount}} + BEZ = {{.Total}}. Jarraitu? [b/E] "
+  "order.confirmMultiTotal": "{{.Count}} domeinu — {{.Amount}} + BEZ = {{.Total}}. Jarraitu? [y/N] "
 }

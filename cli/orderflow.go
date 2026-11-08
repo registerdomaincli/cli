@@ -50,10 +50,12 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 		if err != nil {
 			return false, fail(err)
 		}
-		// Echo the server's per-domain years back into the request so order
-		// time re-prices exactly what was confirmed.
+		// The order must charge exactly what the confirmation displayed:
+		// echo the server's quoted term per domain (positional — the quote
+		// preserves request order), overriding the requested --years when
+		// the upstream price comes from a different term.
 		for i := range req.Items {
-			if req.Items[i].Years == 0 && i < len(qr.Quotes) {
+			if i < len(qr.Quotes) {
 				req.Items[i].Years = qr.Quotes[i].Years
 			}
 		}

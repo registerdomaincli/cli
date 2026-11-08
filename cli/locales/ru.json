@@ -207,5 +207,5 @@
   "tlds.listHdr": "Доступные TLD ({{.Count}}):",
   "tlds.filteredFooter": "Отфильтровано по группе \"{{.Group}}\". Запустите без --group, чтобы увидеть всё.",
   "order.confirmMulti": "{{.Domain}}, {{.Years}} г. — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} доменов — {{.Amount}} + НДС = {{.Total}}. Продолжить? [д/н] "
+  "order.confirmMultiTotal": "{{.Count}} доменов — {{.Amount}} + НДС = {{.Total}}. Продолжить? [y/N] "
 }

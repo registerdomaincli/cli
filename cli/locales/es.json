@@ -207,5 +207,5 @@
   "tlds.listHdr": "TLDs disponibles ({{.Count}}):",
   "tlds.filteredFooter": "Filtrado al grupo \"{{.Group}}\". Ejecútalo sin --group para verlo todo.",
   "order.confirmMulti": "{{.Domain}}, {{.Years}} año/s — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} dominios — {{.Amount}} + IVA = {{.Total}}. ¿Continuar? [s/N] "
+  "order.confirmMultiTotal": "{{.Count}} dominios — {{.Amount}} + IVA = {{.Total}}. ¿Continuar? [y/N] "
 }

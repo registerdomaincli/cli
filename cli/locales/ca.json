@@ -207,5 +207,5 @@
   "tlds.listHdr": "TLDs venibles ({{.Count}}):",
   "tlds.filteredFooter": "Filtrat al grup \"{{.Group}}\". Executa-ho sense --group per veure-ho tot.",
   "order.confirmMulti": "{{.Domain}}, {{.Years}} any/s — {{.Amount}}",
-  "order.confirmMultiTotal": "{{.Count}} dominis — {{.Amount}} + IVA = {{.Total}}. Continuar? [s/N] "
+  "order.confirmMultiTotal": "{{.Count}} dominis — {{.Amount}} + IVA = {{.Total}}. Continuar? [y/N] "
 }

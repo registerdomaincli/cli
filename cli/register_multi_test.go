@@ -125,6 +125,50 @@ func TestRegisterSingleDomainKeepsLegacyShape(t *testing.T) {
 	}
 }
 
+// TestRegisterMultiUsesQuotedYears asserts the order carries the SERVER's
+func TestRegisterMultiUsesQuotedYears(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+
+	var gotOrder apitypes.CreateOrderRequest
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/v1/quotes":
+			_ = json.NewEncoder(w).Encode(apitypes.QuoteResponse{
+				Quotes: []apitypes.Quote{
+					{Domain: "q1.com", Years: 2, NetCents: 2728, TotalCents: 3200, Currency: "usd"},
+					{Domain: "q2.com", Years: 1, NetCents: 1364, TotalCents: 1600, Currency: "usd"},
+				},
+				NetCents: 4092, TaxCents: 708, TotalCents: 4800, Currency: "usd",
+			})
+		case "/v1/orders":
+			_ = json.NewDecoder(r.Body).Decode(&gotOrder)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{
+				ID: "o", Status: "pending_payment", CheckoutURL: "https://x",
+			})
+		case "/v1/contact-sets", "/v1/me":
+			_ = json.NewEncoder(w).Encode(apitypes.ContactSetsResponse{})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	})
+
+	runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes", "--no-wait", "--json",
+		"register", "q1.com", "q2.com", "--years", "5",
+		"--first-name", "T", "--last-name", "U", "--email", "t@u.io",
+		"--phone", "+34000000000", "--address1", "X", "--city", "Y",
+		"--zip", "Z", "--country", "ES",
+	}, "")
+
+	if gotOrder.Items[0].Years != 2 || gotOrder.Items[1].Years != 1 {
+		t.Errorf("order must carry quoted years (2,1), got (%d,%d)",
+			gotOrder.Items[0].Years, gotOrder.Items[1].Years)
+	}
+}
+
 // TestOrdersTableShowsMultiDomains renders the orders table for a
 // multi-domain order and asserts every domain appears in the domain column.
 func TestOrdersTableShowsMultiDomains(t *testing.T) {
