@@ -254,3 +254,121 @@ func TestRegisterMultiDryRunShowsTotals(t *testing.T) {
 		t.Error("--dry-run must not create an order")
 	}
 }
+
+// TestRegisterMultiRejectsIncompleteQuote covers the AvN gate: a truncated
+// batch quote (fewer rows than requested) aborts before --yes and creates
+// no order.
+func TestRegisterMultiRejectsIncompleteQuote(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var ordersCalled atomic.Bool
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/quotes":
+			// Two domains requested, server answers with ONE row.
+			_ = json.NewEncoder(w).Encode(apitypes.QuoteResponse{
+				Quotes: []apitypes.Quote{
+					{Domain: "q1.com", Years: 1, NetCents: 1364, TotalCents: 1600, Currency: "usd"},
+				},
+				NetCents: 1364, TaxCents: 300, TotalCents: 1664, Currency: "usd",
+			})
+		case "/v1/orders":
+			ordersCalled.Store(true)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{ID: "o"})
+		case "/v1/contact-sets", "/v1/me":
+			_ = json.NewEncoder(w).Encode(apitypes.ContactSetsResponse{})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	})
+	out := runRootErr(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes", "--no-wait", "--json",
+		"register", "q1.com", "q2.com",
+		"--first-name", "T", "--last-name", "U", "--email", "t@u.io",
+		"--phone", "+34000000000", "--address1", "X", "--city", "Y",
+		"--zip", "Z", "--country", "ES",
+	})
+	if !strings.Contains(out, "could not be quoted") && !strings.Contains(out, "err.quoteIncomplete") {
+		t.Errorf("incomplete-quote error missing:\n%s", out)
+	}
+	if ordersCalled.Load() {
+		t.Error("incomplete quote must never create an order")
+	}
+}
+
+// TestRegisterMultiRejectsMismatchedQuoteRow covers the other half of the
+// gate: a same-length quote whose row is for a DIFFERENT domain aborts.
+func TestRegisterMultiRejectsMismatchedQuoteRow(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var ordersCalled atomic.Bool
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/quotes":
+			_ = json.NewEncoder(w).Encode(apitypes.QuoteResponse{
+				Quotes: []apitypes.Quote{
+					{Domain: "wrong1.com", Years: 1, NetCents: 900, TotalCents: 1100, Currency: "usd"},
+					{Domain: "wrong2.com", Years: 1, NetCents: 900, TotalCents: 1100, Currency: "usd"},
+				},
+				NetCents: 1800, TaxCents: 378, TotalCents: 2178, Currency: "usd",
+			})
+		case "/v1/orders":
+			ordersCalled.Store(true)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{ID: "o"})
+		case "/v1/contact-sets", "/v1/me":
+			_ = json.NewEncoder(w).Encode(apitypes.ContactSetsResponse{})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	})
+	out := runRootErr(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes", "--no-wait", "--json",
+		"register", "m1.com", "m2.com",
+		"--first-name", "T", "--last-name", "U", "--email", "t@u.io",
+		"--phone", "+34000000000", "--address1", "X", "--city", "Y",
+		"--zip", "Z", "--country", "ES",
+	})
+	if !strings.Contains(out, "could not be quoted") && !strings.Contains(out, "err.quoteIncomplete") {
+		t.Errorf("mismatched-quote error missing:\n%s", out)
+	}
+	if ordersCalled.Load() {
+		t.Error("mismatched quote must never create an order")
+	}
+}
+
+// TestRegisterMultiDryRunJSONPrintsQuote asserts --dry-run --json emits the
+// machine-readable QuoteResponse (agents read the per-domain terms/totals
+// without polling a human).
+func TestRegisterMultiDryRunJSONPrintsQuote(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/quotes":
+			_ = json.NewEncoder(w).Encode(apitypes.QuoteResponse{
+				Quotes: []apitypes.Quote{
+					{Domain: "j1.com", Years: 1, NetCents: 1364, TotalCents: 1600, Currency: "usd"},
+					{Domain: "j2.com", Years: 1, NetCents: 1525, TotalCents: 1800, Currency: "usd"},
+				},
+				NetCents: 2889, TaxCents: 611, TotalCents: 3500, Currency: "usd",
+			})
+		case "/v1/orders", "/v1/contact-sets", "/v1/me":
+			t.Errorf("dry-run must not touch %s", r.URL.Path)
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+	})
+	out := runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "register", "j1.com", "j2.com",
+		"--dry-run", "--json",
+	}, "")
+	if !strings.Contains(out, `"j1.com"`) || !strings.Contains(out, `"j2.com"`) {
+		t.Errorf("quote rows missing from JSON dry-run:\n%s", out)
+	}
+	if !strings.Contains(out, `"netCents": 2889`) || !strings.Contains(out, `"totalCents": 3500`) {
+		t.Errorf("order-level totals missing:\n%s", out)
+	}
+}

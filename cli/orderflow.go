@@ -31,10 +31,18 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 	// The requested currency rides on both the quote and the order so the
 	// server prices, records and charges in one currency.
 	req.Currency = app.Currency
+	var lastQuoteResponse *apitypes.QuoteResponse
 	if len(req.Items) == 0 {
 		quote, err := app.Client.Quote(req.Domain, req.Years, req.Kind, app.Currency)
 		if err != nil {
 			return false, fail(err)
+		}
+		lastQuoteResponse = &apitypes.QuoteResponse{
+			Quotes:     []apitypes.Quote{quote},
+			NetCents:   quote.NetCents,
+			TaxCents:   quote.TaxCents,
+			TotalCents: quote.TotalCents,
+			Currency:   quote.Currency,
 		}
 		if !jsonFlag {
 			fmt.Fprintf(out, "%s", i18n.T("order.confirm",
@@ -44,6 +52,7 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 				"Total", formatMoney(quote.TotalCents, quote.Currency)))
 		}
 	}
+
 	if len(req.Items) > 0 {
 		qr, err := app.Client.QuoteDomains(apitypes.QuoteRequest{
 			Kind: req.Kind, Years: req.Years, Currency: app.Currency, Domains: itemInputs(req.Items),
@@ -62,6 +71,7 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 				return false, errors.New(i18n.T("err.quoteIncomplete"))
 			}
 		}
+		lastQuoteResponse = &qr
 		// The order must charge exactly what the confirmation displayed:
 		// echo the server's quoted term per domain (positional — the quote
 		// preserves request order), overriding the requested --years when
@@ -83,9 +93,12 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 		}
 	}
 	if dryRun {
-		if !jsonFlag {
-			fmt.Fprintln(out)
+		if jsonFlag {
+			// Agents: the machine-readable quote response — per-domain rows
+			// plus the order-level totals (no order is created).
+			return false, emitJSON(cmd, lastQuoteResponse)
 		}
+		fmt.Fprintln(out)
 		fmt.Fprintln(out, i18n.T("order.dryRun"))
 		return false, nil
 	}
