@@ -65,7 +65,7 @@
   "confirm.prompt": "Continue? [y/N] ",
   "confirm.aborted": "Aborted.",
   "register.short": "Register a new domain",
-  "register.long": "Registers a new domain.\n\nShows the exact price first and asks for confirmation before creating the\norder, then opens the checkout page in your browser and waits for the\npayment to complete.\n\nRegistrant precedence: an inline prompt (--own-contact) wins, then\n--contact <label>, then your default contact set; if you have none, you\nare prompted and offered to save the details as a contact set.",
+  "register.long": "Registers one or more new domains.\n\nWith several domains they go into ONE order: one checkout page, one\npayment, one invoice with a line per domain. Shows the exact price first\nand asks for confirmation before creating the order, then opens the\ncheckout page in your browser and waits for the payment to complete.\n\nRegistrant precedence: an inline prompt (--own-contact) wins, then\n--contact <label>, then your default contact set; if you have none, you\nare prompted and offered to save the details as a contact set.",
   "renew.short": "Renew a domain",
   "renew.long": "Renews a domain for one or more years.\n\nShows the exact price first and asks for confirmation before creating the\norder, then opens the checkout page in your browser and waits for the\npayment to complete.",
   "transfer.short": "Transfer a domain to RegisterDomainCLI",
@@ -205,5 +205,8 @@
   "tlds.long": "Shows every TLD this account can register, grouped by intent (local, business, tech, shop, creative, org). Use a group slug with --group, or pass TLDs to 'search --tlds'.",
   "tlds.groupsHdr": "Groups (use with --group or to pick --tlds sets):",
   "tlds.listHdr": "Sellable TLDs ({{.Count}}):",
-  "tlds.filteredFooter": "Filtered to group \"{{.Group}}\". Run without --group to see everything."
+  "tlds.filteredFooter": "Filtered to group \"{{.Group}}\". Run without --group to see everything.",
+  "order.confirmMulti": "{{.Domain}}, {{.Years}} yr — {{.Amount}}",
+  "order.confirmMultiTotal": "{{.Count}} domains — {{.Amount}} + VAT = {{.Total}}. Continue? [y/N] ",
+  "err.quoteIncomplete": "The price could not be quoted for every domain requested. Nothing was charged; try again."
 }

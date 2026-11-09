@@ -19,6 +19,7 @@ domain-cli search mybrand                        # keyword search across TLDs
 domain-cli search mybrand --tlds cat,gal,eus     # restrict to specific TLDs
 domain-cli tlds                                  # catalog: sellable TLDs + intent groups
 domain-cli register mybrand.com                  # quote, checkout, registration
+domain-cli register a.com b.com c.com            # several domains in ONE order: one checkout, one payment
 domain-cli dns set mybrand.com A @ 203.0.113.10
 ```
 

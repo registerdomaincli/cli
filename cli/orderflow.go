@@ -3,6 +3,7 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/registerdomaincli/cli/apitypes"
@@ -30,21 +31,74 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 	// The requested currency rides on both the quote and the order so the
 	// server prices, records and charges in one currency.
 	req.Currency = app.Currency
-	quote, err := app.Client.Quote(req.Domain, req.Years, req.Kind, app.Currency)
-	if err != nil {
-		return false, fail(err)
+	var lastQuoteResponse *apitypes.QuoteResponse
+	if len(req.Items) == 0 {
+		quote, err := app.Client.Quote(req.Domain, req.Years, req.Kind, app.Currency)
+		if err != nil {
+			return false, fail(err)
+		}
+		lastQuoteResponse = &apitypes.QuoteResponse{
+			Quotes:     []apitypes.Quote{quote},
+			NetCents:   quote.NetCents,
+			TaxCents:   quote.TaxCents,
+			TotalCents: quote.TotalCents,
+			Currency:   quote.Currency,
+		}
+		if !jsonFlag {
+			fmt.Fprintf(out, "%s", i18n.T("order.confirm",
+				"Domain", quote.Domain,
+				"Years", quote.Years,
+				"Amount", formatMoney(quote.NetCents, quote.Currency),
+				"Total", formatMoney(quote.TotalCents, quote.Currency)))
+		}
 	}
-	if !jsonFlag {
-		fmt.Fprintf(out, "%s", i18n.T("order.confirm",
-			"Domain", quote.Domain,
-			"Years", quote.Years,
-			"Amount", formatMoney(quote.NetCents, quote.Currency),
-			"Total", formatMoney(quote.TotalCents, quote.Currency)))
+
+	if len(req.Items) > 0 {
+		qr, err := app.Client.QuoteDomains(apitypes.QuoteRequest{
+			Kind: req.Kind, Years: req.Years, Currency: app.Currency, Domains: itemInputs(req.Items),
+		})
+		if err != nil {
+			return false, fail(err)
+		}
+		// SECURITY GATE: every requested item needs a matching quote with
+		// its domain, or the confirmation showed less than the order will
+		// charge. A partial/truncated response aborts BEFORE --yes.
+		if len(qr.Quotes) != len(req.Items) {
+			return false, errors.New(i18n.T("err.quoteIncomplete"))
+		}
+		for i := range req.Items {
+			if !strings.EqualFold(req.Items[i].Domain, qr.Quotes[i].Domain) {
+				return false, errors.New(i18n.T("err.quoteIncomplete"))
+			}
+		}
+		lastQuoteResponse = &qr
+		// The order must charge exactly what the confirmation displayed:
+		// echo the server's quoted term per domain (positional — the quote
+		// preserves request order), overriding the requested --years when
+		// the upstream price comes from a different term.
+		for i := range req.Items {
+			req.Items[i].Years = qr.Quotes[i].Years
+		}
+		if !jsonFlag {
+			for _, q := range qr.Quotes {
+				fmt.Fprintln(out, i18n.T("order.confirmMulti",
+					"Domain", q.Domain,
+					"Years", q.Years,
+					"Amount", formatMoney(q.NetCents, q.Currency)))
+			}
+			fmt.Fprintln(out, i18n.T("order.confirmMultiTotal",
+				"Count", len(qr.Quotes),
+				"Amount", formatMoney(qr.NetCents, qr.Currency),
+				"Total", formatMoney(qr.TotalCents, qr.Currency)))
+		}
 	}
 	if dryRun {
-		if !jsonFlag {
-			fmt.Fprintln(out)
+		if jsonFlag {
+			// Agents: the machine-readable quote response — per-domain rows
+			// plus the order-level totals (no order is created).
+			return false, emitJSON(cmd, lastQuoteResponse)
 		}
+		fmt.Fprintln(out)
 		fmt.Fprintln(out, i18n.T("order.dryRun"))
 		return false, nil
 	}
@@ -83,6 +137,15 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 		return true, err
 	}
 	return true, nil
+}
+
+// itemInputs converts request items into batch-quote inputs (domain+years).
+func itemInputs(items []apitypes.OrderItemInput) []apitypes.QuoteItemInput {
+	out := make([]apitypes.QuoteItemInput, 0, len(items))
+	for _, it := range items {
+		out = append(out, apitypes.QuoteItemInput{Domain: it.Domain, Years: it.Years})
+	}
+	return out
 }
 
 func lower(s string) string {

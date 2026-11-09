@@ -45,6 +45,11 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   after the human confirmed the quoted price. Without it the command fails by
   design. `--no-wait` returns right after order creation with the checkout
   URL — the human completes payment in the browser asynchronously.
+- **Editing an order is cancel + recreate**: an unpaid order can be dropped
+  with `domain-cli orders --cancel <id>` and placed again with the full
+  domain list (add or remove domains by re-running `register` with the
+  wanted set). There is no patch endpoint — the payment session is immutable
+  once created.
 - **Registrant contacts** (registration/transfer): pass `--contact <label>`
   or the full flag set (`--first-name --last-name --email --phone --address1
   --city --zip --country`, optional `--organization --address2 --state`);
@@ -107,7 +112,9 @@ same account, same dcl_ token, same API:
   access token is a normal dcl_ token. No token copying for the human.
   A static `Authorization: Bearer dcl_…` header keeps working too.
 - **Tools** mirror the CLI: `whoami`, `search_domains`, `quote`,
-  `create_order`, `list_orders`, `get_order`, `cancel_order`,
+  `quote_domains` (price several domains in one call), `create_order`
+  (`domains[]` buys several domains in ONE order: one checkout, one
+  payment), `list_orders`, `get_order`, `cancel_order`,
   `list_domains`, `get_domain`, `set_lock`, `set_autorenew`,
   `get_auth_code`, `list_records`, `create_record`, `delete_record`,
   `get_nameservers`, `set_nameservers`, `list_contact_sets`,
@@ -133,7 +140,7 @@ production).
 |---|---|
 | `domain-cli search <query> [--tlds com,net,...] [--limit N]` | Keyword search, or FQDN check when the query contains a dot. `--tlds` restricts the result to those TLDs (≤50, run `tlds` to see the catalog); `--limit` caps rows (default and ceiling 50). Prices are indicative; exact charge appears at `register`/`renew`/`transfer` confirm time. |
 | `domain-cli tlds [--group <slug>]` | List every sellable TLD with its curated intent groups (`local`, `business`, `tech`, `shop`, `creative`, `org`). `--group` filters the list. Use it to translate "domains in the user's region" into an exact `--tlds` set. |
-| `domain-cli register <domain> [--years N] [--own-contact \| --contact <label>] [--dry-run]` | Quote → confirm → order → checkout in the human's browser → polls until paid/failed. Prompts for registrant when no default contact set exists; offers to save it. |
+| `domain-cli register <domain...> [--years N] [--own-contact \| --contact <label>] [--dry-run]` | Quote → confirm → order → checkout in the human's browser → polls until paid/failed. With SEVERAL domains they go into ONE order (one checkout, one payment, one invoice with a line per domain). Prompts for registrant when no default contact set exists; offers to save it. |
 | `domain-cli renew <domain> [--years N]` | Same flow with `kind=renewal`. |
 | `domain-cli transfer <domain> --auth-code <code> [--contact <label>] [--own-contact]` | Same flow with `kind=transfer`. Transfers take up to 7 days; watch `domain-cli orders`. |
 | `domain-cli orders [--cancel <id>]` | List orders (status, invoice number, checkout URL) or cancel an open order. |

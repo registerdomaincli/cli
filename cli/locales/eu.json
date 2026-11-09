@@ -65,7 +65,7 @@
   "confirm.prompt": "Jarraitu? [y/N] ",
   "confirm.aborted": "Bertan behera utzita.",
   "register.short": "Erregistratu domeinu berri bat",
-  "register.long": "Domeinu berri bat erregistratzen du.\n\nLehenik prezio zehatza erakusten du eta berrespena eskatzen du eskaera sortu\naurretik; ondoren ordainketa-orria zure nabigatzailean irekitzen du eta\nordainketa amaitu arte itxaroten du.\n\nTitularraren lehentasuna: eskuz sartzeak (--own-contact) irabazten du, gero\n--contact <etiketa>, gero zure kontaktu-multzo lehenetsiak; bat ere ez baduzu,\neskatu egingo zaizu eta kontaktu-multzo gisa gordetzea eskainiko zaizu.",
+  "register.long": "Domeinu berri bat edo gehiago erregistratzen ditu.\n\nHainbat domeinurekin, ESKAERA BAKAR batean doaz: ordainketa-orri bat,\nkobratze bat, faktura bat domeinu bakoitzeko lerro batekin. Lehenik\nprezio zehatza erakusten du eta eskaera sortu aurretik berrespena esaten\ndu; gero ordainketa-orria nabigatzailean irekitzen du eta amaitu arte\nitxaroten du.\n\nTitularraren lehentasuna: sarrera interaktiboak (--own-contact) irabazi\ndu, gero --contact <etiketa>, gero kontaktu-multzo lehenetsia; horiekin bat ere ez baduzu, datuak eskatzen dira eta gordetzea eskaintzen da.",
   "renew.short": "Berritu domeinu bat",
   "renew.long": "Domeinu bat urtebeterako edo gehiagorako berritzen du.\n\nLehenik prezio zehatza erakusten du eta berrespena eskatzen du eskaera sortu\naurretik; ondoren ordainketa-orria zure nabigatzailean irekitzen du eta\nordainketa amaitu arte itxaroten du.",
   "transfer.short": "Transferitu domeinu bat RegisterDomainCLI-ra",
@@ -205,5 +205,8 @@
   "tlds.long": "Kontu honek erregistratu ditzakeen TLD guztiak erakusten ditu, borondatearen arabera talkatuta (local, business, tech, shop, creative, org). Erabili talde slug bat --group-ekin, edo eman TLDak 'search --tlds'-i.",
   "tlds.groupsHdr": "Taldeak (--group-ekin erabili edo --tlds multzoak aukeratzeko):",
   "tlds.listHdr": "Salgai dauden TLDak ({{.Count}}):",
-  "tlds.filteredFooter": "\"{{.Group}}\" taldera iragazita. Exekutatu --group gabe dena ikusteko."
+  "tlds.filteredFooter": "\"{{.Group}}\" taldera iragazita. Exekutatu --group gabe dena ikusteko.",
+  "order.confirmMulti": "{{.Domain}}, {{.Years}} urte — {{.Amount}}",
+  "order.confirmMultiTotal": "{{.Count}} domeinu — {{.Amount}} + BEZ = {{.Total}}. Jarraitu? [y/N] ",
+  "err.quoteIncomplete": "Ezin izan da eskatutako domeinu bakoitza kotizatu. Ez da kobratu; saiatu berriro."
 }

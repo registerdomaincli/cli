@@ -26,10 +26,10 @@ func newRegisterCmd(app *App) *cobra.Command {
 	var dryRun, noWait bool
 	var rf registrantFlags
 	cmd := &cobra.Command{
-		Use:   "register <domain>",
+		Use:   "register <domain...>",
 		Short: i18n.T("register.short"),
 		Long:  i18n.T("register.long"),
-		Args:  exactArgs(1),
+		Args:  minArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if years < 1 || years > 10 {
 				return errors.New(i18n.T("err.invalidYears"))
@@ -46,10 +46,16 @@ func newRegisterCmd(app *App) *cobra.Command {
 			}
 			req := apitypes.CreateOrderRequest{
 				Kind:         "registration",
-				Domain:       args[0],
 				Years:        years,
 				Registrant:   reg,
 				ContactSetID: setID,
+			}
+			if len(args) == 1 {
+				req.Domain = args[0]
+			} else {
+				for _, d := range args {
+					req.Items = append(req.Items, apitypes.OrderItemInput{Domain: d, Years: years})
+				}
 			}
 			created, err := orderFlow(cmd, app, req, dryRun, noWait)
 			if err != nil {
@@ -180,7 +186,7 @@ func newOrdersCmd(app *App) *cobra.Command {
 			rows := make([][]string, 0, len(resp.Orders))
 			for _, o := range resp.Orders {
 				rows = append(rows, []string{
-					o.ID, o.Kind, o.Domain, o.Status, o.InvoiceNumber, o.CheckoutURL,
+					o.ID, o.Kind, orderDomains(o), o.Status, o.InvoiceNumber, o.CheckoutURL,
 				})
 			}
 			printTable(out, []string{
@@ -196,6 +202,19 @@ func newOrdersCmd(app *App) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&cancel, "cancel", "", "cancel the order with this id")
 	return cmd
+}
+
+// orderDomains renders the domain column: the single domain, or the joined
+// item list of a multi-domain order.
+func orderDomains(o apitypes.Order) string {
+	if len(o.Items) == 0 {
+		return o.Domain
+	}
+	names := make([]string, 0, len(o.Items))
+	for _, it := range o.Items {
+		names = append(names, it.Domain)
+	}
+	return strings.Join(names, ", ")
 }
 
 func newInvoiceCmd(app *App) *cobra.Command {

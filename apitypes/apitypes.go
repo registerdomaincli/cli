@@ -106,6 +106,32 @@ type Quote struct {
 	Currency      string  `json:"currency"`
 }
 
+// QuoteRequest is the body of POST /v1/quotes: one quote for a whole list
+// of domains. All domains share one kind and one currency; per-domain
+// years are allowed (0 inherits the top-level Years).
+type QuoteRequest struct {
+	Kind     string           `json:"kind,omitempty"` // registration | renewal | transfer; default registration
+	Years    int              `json:"years,omitempty"`
+	Domains  []QuoteItemInput `json:"domains"`
+	Currency string           `json:"currency,omitempty"` // ISO 4217, lowercase; empty = server default
+}
+
+// QuoteItemInput is one domain inside a QuoteRequest.
+type QuoteItemInput struct {
+	Domain string `json:"domain"`
+	Years  int    `json:"years,omitempty"`
+}
+
+// QuoteResponse is the envelope of POST /v1/quotes: per-domain quotes plus
+// the order-level totals the checkout will charge (VAT is order-level).
+type QuoteResponse struct {
+	Quotes     []Quote `json:"quotes"`
+	NetCents   int64   `json:"netCents"`
+	TaxCents   int64   `json:"taxCents"`
+	TotalCents int64   `json:"totalCents"`
+	Currency   string  `json:"currency"`
+}
+
 // Registrant is the WHOIS registrant contact. Organization, Address2 and
 // State are optional; everything else is required. Registrations are made in
 // the client's name: this contact is the customer of record for the
@@ -125,38 +151,61 @@ type Registrant struct {
 }
 
 // CreateOrderRequest is the body of POST /v1/orders. Kind defaults to
-// "registration". AuthCode is required for transfers; a Registrant (inline,
-// via ContactSetID, or the user's default set) is required for registration
-// and transfer. Years is 1-10 for registration/renewal and ignored for
-// transfers (a gTLD transfer adds exactly one year).
+// "registration". A single order may carry ONE domain (Domain/Years, the
+// legacy shape) or a LIST of domains (Items) sharing the kind, currency,
+// registrant and payment. One checkout charges everything; fulfilment is
+// per item.
 type CreateOrderRequest struct {
-	Kind         string      `json:"kind,omitempty"`
-	Domain       string      `json:"domain"`
-	Years        int         `json:"years,omitempty"`
-	AuthCode     string      `json:"authCode,omitempty"`
-	Currency     string      `json:"currency,omitempty"` // ISO 4217, lowercase; empty = server default
-	Registrant   *Registrant `json:"registrant,omitempty"`
-	ContactSetID string      `json:"contactSetId,omitempty"`
+	Kind         string           `json:"kind,omitempty"`
+	Domain       string           `json:"domain"`
+	Years        int              `json:"years,omitempty"`
+	Items        []OrderItemInput `json:"items,omitempty"` // multi-domain form; wins when set
+	AuthCode     string           `json:"authCode,omitempty"`
+	Currency     string           `json:"currency,omitempty"` // ISO 4217, lowercase; empty = server default
+	Registrant   *Registrant      `json:"registrant,omitempty"`
+	ContactSetID string           `json:"contactSetId,omitempty"`
+}
+
+// OrderItemInput is one domain inside a multi-domain order. Years 0
+// inherits the top-level Years; AuthCode is per-domain for transfers.
+type OrderItemInput struct {
+	Domain   string `json:"domain"`
+	Years    int    `json:"years,omitempty"`
+	AuthCode string `json:"authCode,omitempty"`
+}
+
+// OrderItem is one domain inside a multi-domain order, with its own price
+// and fulfilment status. Single-domain orders leave Items empty and keep
+// the top-level fields.
+type OrderItem struct {
+	Domain        string  `json:"domain"`
+	Years         int     `json:"years"`
+	UpstreamPrice float64 `json:"upstreamPrice"`
+	NetCents      int64   `json:"netCents"`
+	Premium       bool    `json:"premium"`
+	Status        string  `json:"status"` // pending | processing | completed | failed
+	FailureReason string  `json:"failureReason,omitempty"`
 }
 
 // Order is the order resource returned by the orders endpoints.
 // InvoiceURL is a pre-signed absolute URL (24 h validity) so it can be opened
 // in a browser that carries no Authorization header.
 type Order struct {
-	ID            string    `json:"id"`
-	Kind          string    `json:"kind"`
-	Domain        string    `json:"domain"`
-	Years         int       `json:"years"`
-	NetCents      int64     `json:"netCents"`
-	TaxCents      int64     `json:"taxCents"`
-	TotalCents    int64     `json:"totalCents"`
-	Currency      string    `json:"currency"`
-	Status        string    `json:"status"` // pending_payment | paid | processing | completed | failed | refunded | expired | cancelled
-	CheckoutURL   string    `json:"checkoutUrl"`
-	InvoiceNumber string    `json:"invoiceNumber,omitempty"`
-	InvoiceURL    string    `json:"invoiceUrl,omitempty"`
-	FailureReason string    `json:"failureReason,omitempty"`
-	CreatedAt     time.Time `json:"createdAt"`
+	ID            string      `json:"id"`
+	Kind          string      `json:"kind"`
+	Domain        string      `json:"domain"`
+	Items         []OrderItem `json:"items,omitempty"` // per-domain lines on multi-domain orders
+	Years         int         `json:"years"`
+	NetCents      int64       `json:"netCents"`
+	TaxCents      int64       `json:"taxCents"`
+	TotalCents    int64       `json:"totalCents"`
+	Currency      string      `json:"currency"`
+	Status        string      `json:"status"` // pending_payment | paid | processing | completed | failed | refunded | expired | cancelled
+	CheckoutURL   string      `json:"checkoutUrl"`
+	InvoiceNumber string      `json:"invoiceNumber,omitempty"`
+	InvoiceURL    string      `json:"invoiceUrl,omitempty"`
+	FailureReason string      `json:"failureReason,omitempty"`
+	CreatedAt     time.Time   `json:"createdAt"`
 }
 
 // SignupResponse acknowledges that the verification email was sent. The

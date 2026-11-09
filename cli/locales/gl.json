@@ -65,7 +65,7 @@
   "confirm.prompt": "Continuar? [y/N] ",
   "confirm.aborted": "Cancelado.",
   "register.short": "Rexistra un dominio novo",
-  "register.long": "Rexistra un dominio novo.\n\nAmosa primeiro o prezo exacto e pide confirmación antes de crear o\npedido; despois abre a páxina de pagamento no teu navegador e agarda a\nque remate o pagamento.\n\nPrioridade do titular: a introdución manual (--own-contact) ten\nprioridade, logo --contact <etiqueta>, logo o teu conxunto de contactos\npredeterminado; se non tes ningún, pediráseche e ofreceráseche gardalo\ncomo conxunto de contactos.",
+  "register.long": "Rexistra un ou máis dominios novos.\n\nCon varios dominios van nun ÚNICO pedido: unha páxina de pago, un\ncobro, unha factura cunha liña por dominio. Mostra o prezo exacto\nprimeiro e pide confirmación antes de crear o pedido; despois abre a\npáxina de pago no navegador e espera a conclusión.\n\nPrecedencia do titular: a petición interactiva (--own-contact) gaña,\ndespois --contact <etiqueta>, despois o conxunto de contactos por\ndefecto; sen ningún, pídense os datos e ofrécese gardalos.",
   "renew.short": "Renova un dominio",
   "renew.long": "Renova un dominio por un ou máis anos.\n\nAmosa primeiro o prezo exacto e pide confirmación antes de crear o\npedido; despois abre a páxina de pagamento no teu navegador e agarda a\nque remate o pagamento.",
   "transfer.short": "Transfire un dominio a RegisterDomainCLI",
@@ -205,5 +205,8 @@
   "tlds.long": "Amosa todos os TLDs que esta conta pode rexistrar, agrupados por intención (local, business, tech, shop, creative, org). Usa un slug de grupo con --group, ou pasa TLDs a 'search --tlds'.",
   "tlds.groupsHdr": "Grupos (úsao con --group ou para escoller conxuntos de --tlds):",
   "tlds.listHdr": "TLDs dispoñibles ({{.Count}}):",
-  "tlds.filteredFooter": "Filtrado ao grupo \"{{.Group}}\". Execútao sen --group para velo todo."
+  "tlds.filteredFooter": "Filtrado ao grupo \"{{.Group}}\". Execútao sen --group para velo todo.",
+  "order.confirmMulti": "{{.Domain}}, {{.Years}} ano/s — {{.Amount}}",
+  "order.confirmMultiTotal": "{{.Count}} dominios — {{.Amount}} + IVE = {{.Total}}. Continuar? [y/N] ",
+  "err.quoteIncomplete": "Non se puido cotizar cada dominio solicitado. Non se cobrou nada; téntao de novo."
 }

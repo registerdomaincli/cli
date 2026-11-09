@@ -191,6 +191,15 @@ func (c *Client) Quote(domain string, years int, kind, currency string) (apitype
 	return out, err
 }
 
+// QuoteDomains prices a whole domain list in one round trip through
+// POST /v1/quotes. All domains share kind and currency; per-domain years
+// ride inside the request.
+func (c *Client) QuoteDomains(req apitypes.QuoteRequest) (apitypes.QuoteResponse, error) {
+	var out apitypes.QuoteResponse
+	err := c.do(http.MethodPost, "/v1/quotes", req, &out)
+	return out, err
+}
+
 // CreateOrder places an order. The server answers 201 with the Order.
 func (c *Client) CreateOrder(req apitypes.CreateOrderRequest) (apitypes.Order, error) {
 	var out apitypes.Order
