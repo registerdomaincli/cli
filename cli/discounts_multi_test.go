@@ -2,11 +2,11 @@ package cli
 
 import (
 	"encoding/json"
+	"github.com/registerdomaincli/cli/apitypes"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"testing"
-
-	"github.com/registerdomaincli/cli/apitypes"
 )
 
 // discountMultiServer stubs the batch-quote + order endpoints for a
@@ -104,7 +104,7 @@ func TestRegisterMultiDiscountQuoteAndOrderJSON(t *testing.T) {
 func TestRegisterMultiDiscountRender(t *testing.T) {
 	setConfigDir(t)
 	setLocale(t, "en")
-	var ordersCalled bool
+	var ordersCalled atomic.Bool
 	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
@@ -120,7 +120,7 @@ func TestRegisterMultiDiscountRender(t *testing.T) {
 				},
 			})
 		case r.URL.Path == "/v1/orders":
-			ordersCalled = true
+			ordersCalled.Store(true)
 			_ = json.NewEncoder(w).Encode(apitypes.Order{ID: "o1"})
 		case r.URL.Path == "/v1/contact-sets" || r.URL.Path == "/v1/me":
 			_ = json.NewEncoder(w).Encode(apitypes.ContactSetsResponse{})
@@ -147,7 +147,7 @@ func TestRegisterMultiDiscountRender(t *testing.T) {
 	if !strings.Contains(out, "$31.49") {
 		t.Errorf("discounted total missing:\n%s", out)
 	}
-	if ordersCalled {
+	if ordersCalled.Load() {
 		t.Error("--dry-run must not create an order")
 	}
 }
