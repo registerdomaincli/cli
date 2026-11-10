@@ -71,6 +71,7 @@
   "transfer.short": "Transferitu domeinu bat RegisterDomainCLI-ra",
   "transfer.long": "Domeinu bat beste erregistratzaile batetik transferitzen du.\n\nUneko erregistratzailearen transferentzia-kodea (EPP) behar du. Domeinuak\ndesblokeatuta egon behar du han, transferentzia hasi aurretik.\n\nLehenik prezio zehatza erakusten du eta berrespena eskatzen du eskaera sortu\naurretik; ondoren ordainketa-orria zure nabigatzailean irekitzen du.",
   "order.confirm": "{{.Domain}}, {{.Years}} urte — {{.Amount}} + BEZ = {{.Total}}. Jarraitu? [y/N] ",
+  "quote.discount": "Deskontua {{.Code}}: −{{.Amount}}",
   "order.dryRun": "Proba hutsa: ez da eskaerarik sortu.",
   "order.created": "{{.ID}} eskaera sortu da.",
   "order.checkoutOpen": "Ordainketa-orria zure nabigatzailean irekitzen...",

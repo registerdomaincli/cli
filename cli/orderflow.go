@@ -33,7 +33,7 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 	req.Currency = app.Currency
 	var lastQuoteResponse *apitypes.QuoteResponse
 	if len(req.Items) == 0 {
-		quote, err := app.Client.Quote(req.Domain, req.Years, req.Kind, app.Currency)
+		quote, err := app.Client.Quote(req.Domain, req.Years, req.Kind, app.Currency, req.DiscountCode)
 		if err != nil {
 			return false, fail(err)
 		}
@@ -43,8 +43,14 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 			TaxCents:   quote.TaxCents,
 			TotalCents: quote.TotalCents,
 			Currency:   quote.Currency,
+			Discount:   quote.Discount,
 		}
 		if !jsonFlag {
+			if quote.Discount != nil {
+				fmt.Fprintln(out, i18n.T("quote.discount",
+					"Code", quote.Discount.Code,
+					"Amount", formatMoney(quote.Discount.AmountCents, quote.Discount.Currency)))
+			}
 			fmt.Fprintf(out, "%s", i18n.T("order.confirm",
 				"Domain", quote.Domain,
 				"Years", quote.Years,
@@ -55,7 +61,7 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 
 	if len(req.Items) > 0 {
 		qr, err := app.Client.QuoteDomains(apitypes.QuoteRequest{
-			Kind: req.Kind, Years: req.Years, Currency: app.Currency, Domains: itemInputs(req.Items),
+			Kind: req.Kind, Years: req.Years, Currency: app.Currency, DiscountCode: req.DiscountCode, Domains: itemInputs(req.Items),
 		})
 		if err != nil {
 			return false, fail(err)
@@ -85,6 +91,11 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 					"Domain", q.Domain,
 					"Years", q.Years,
 					"Amount", formatMoney(q.NetCents, q.Currency)))
+			}
+			if qr.Discount != nil {
+				fmt.Fprintln(out, i18n.T("quote.discount",
+					"Code", qr.Discount.Code,
+					"Amount", formatMoney(qr.Discount.AmountCents, qr.Discount.Currency)))
 			}
 			fmt.Fprintln(out, i18n.T("order.confirmMultiTotal",
 				"Count", len(qr.Quotes),

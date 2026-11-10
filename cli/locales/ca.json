@@ -71,6 +71,7 @@
   "transfer.short": "Transfereix un domini a RegisterDomainCLI",
   "transfer.long": "Transfereix un domini d'un altre registrador.\n\nNecessita el codi de transferència (EPP) del registrador actual. El\ndomini ha d'estar desbloquejat allà abans de poder iniciar la\ntransferència.\n\nMostra primer el preu exacte i demana confirmació abans de crear la\ncomanda; després obre la pàgina de pagament al navegador.",
   "order.confirm": "{{.Domain}}, {{.Years}} any(s) — {{.Amount}} + IVA = {{.Total}}. Continuar? [y/N] ",
+  "quote.discount": "Descompte {{.Code}}: −{{.Amount}}",
   "order.dryRun": "Simulació: no s'ha creat cap comanda.",
   "order.created": "Comanda {{.ID}} creada.",
   "order.checkoutOpen": "Obrint la pàgina de pagament al navegador...",

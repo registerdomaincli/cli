@@ -71,6 +71,7 @@
   "transfer.short": "Transférer un domaine vers RegisterDomainCLI",
   "transfer.long": "Transfère un domaine depuis un autre registrar.\n\nNécessite le code d'autorisation (EPP) fourni par le registrar actuel. Le\ndomaine doit y être déverrouillé avant de pouvoir lancer le transfert.\n\nAffiche d'abord le prix exact et demande confirmation avant de créer la\ncommande, puis ouvre la page de paiement dans votre navigateur.",
   "order.confirm": "{{.Domain}}, {{.Years}} an(s) — {{.Amount}} + TVA = {{.Total}}. Continuer ? [y/N] ",
+  "quote.discount": "Remise {{.Code}} : −{{.Amount}}",
   "order.dryRun": "Simulation : aucune commande n'a été créée.",
   "order.created": "Commande {{.ID}} créée.",
   "order.checkoutOpen": "Ouverture de la page de paiement dans votre navigateur...",

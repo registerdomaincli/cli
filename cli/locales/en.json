@@ -71,6 +71,7 @@
   "transfer.short": "Transfer a domain to RegisterDomainCLI",
   "transfer.long": "Transfers a domain from another registrar.\n\nRequires the transfer (EPP) auth code from the current registrar. The\ndomain must be unlocked there before the transfer can start.\n\nShows the exact price first and asks for confirmation before creating the\norder, then opens the checkout page in your browser.",
   "order.confirm": "{{.Domain}}, {{.Years}} yr — {{.Amount}} + VAT = {{.Total}}. Continue? [y/N] ",
+  "quote.discount": "Discount {{.Code}}: −{{.Amount}}",
   "order.dryRun": "Dry run: no order was created.",
   "order.created": "Order {{.ID}} created.",
   "order.checkoutOpen": "Opening the checkout page in your browser...",
