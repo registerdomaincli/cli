@@ -21,6 +21,7 @@ import (
 
 func newRegisterCmd(app *App) *cobra.Command {
 	var years int
+	var discount string
 	var ownContact bool
 	var contact, saveContact string
 	var dryRun, noWait bool
@@ -49,6 +50,7 @@ func newRegisterCmd(app *App) *cobra.Command {
 				Years:        years,
 				Registrant:   reg,
 				ContactSetID: setID,
+				DiscountCode: discount,
 			}
 			if len(args) == 1 {
 				req.Domain = args[0]
@@ -82,12 +84,14 @@ func newRegisterCmd(app *App) *cobra.Command {
 	cmd.Flags().StringVar(&saveContact, "save-contact", "", "save the inline registrant as a contact set with this label (no prompt)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show the price and stop before creating the order")
 	cmd.Flags().BoolVar(&noWait, "no-wait", false, "print the order id + checkout URL and exit (complete payment asynchronously)")
+	cmd.Flags().StringVar(&discount, "discount", "", "apply the discount code with this name to the order")
 	addRegistrantFlags(cmd, &rf)
 	return cmd
 }
 
 func newRenewCmd(app *App) *cobra.Command {
 	var years int
+	var discount string
 	var dryRun, noWait bool
 	cmd := &cobra.Command{
 		Use:   "renew <domain>",
@@ -98,7 +102,7 @@ func newRenewCmd(app *App) *cobra.Command {
 			if years < 1 || years > 10 {
 				return errors.New(i18n.T("err.invalidYears"))
 			}
-			req := apitypes.CreateOrderRequest{Kind: "renewal", Domain: args[0], Years: years}
+			req := apitypes.CreateOrderRequest{Kind: "renewal", Domain: args[0], Years: years, DiscountCode: discount}
 			_, err := orderFlow(cmd, app, req, dryRun, noWait)
 			return err
 		},
@@ -106,6 +110,7 @@ func newRenewCmd(app *App) *cobra.Command {
 	cmd.Flags().IntVarP(&years, "years", "y", 1, "years to renew (1-10)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show the price and stop before creating the order")
 	cmd.Flags().BoolVar(&noWait, "no-wait", false, "print the order id + checkout URL and exit")
+	cmd.Flags().StringVar(&discount, "discount", "", "apply the discount code with this name to the order")
 	return cmd
 }
 
@@ -114,6 +119,7 @@ func newTransferCmd(app *App) *cobra.Command {
 	var authCode string
 	var rf registrantFlags
 	var dryRun, noWait bool
+	var discount string
 	cmd := &cobra.Command{
 		Use:   "transfer <domain> --auth-code <code>",
 		Short: i18n.T("transfer.short"),
@@ -133,6 +139,7 @@ func newTransferCmd(app *App) *cobra.Command {
 				AuthCode:     authCode,
 				Registrant:   reg,
 				ContactSetID: setID,
+				DiscountCode: discount,
 			}
 			created, err := orderFlow(cmd, app, req, dryRun, noWait)
 			if err != nil {
@@ -148,6 +155,7 @@ func newTransferCmd(app *App) *cobra.Command {
 	cmd.Flags().StringVar(&authCode, "auth-code", "", "EPP/auth code from the losing registrar (required)")
 	cmd.Flags().StringVar(&contact, "contact", "", "use the saved contact set with this label")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show the price and stop before creating the order")
+	cmd.Flags().StringVar(&discount, "discount", "", "apply the discount code with this name to the order")
 	addRegistrantFlags(cmd, &rf)
 	return cmd
 }

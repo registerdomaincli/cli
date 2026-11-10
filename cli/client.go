@@ -180,14 +180,18 @@ func (c *Client) TLDs(group string) (apitypes.TldCatalog, error) {
 
 // Quote fetches the authoritative pre-order price. years is ignored for
 // transfers. currency is the billing currency requested for the quote;
-// empty means the server's default.
-func (c *Client) Quote(domain string, years int, kind, currency string) (apitypes.Quote, error) {
+// empty means the server's default. discount is an optional discount code;
+// empty sends no parameter.
+func (c *Client) Quote(domain string, years int, kind, currency, discount string) (apitypes.Quote, error) {
 	var out apitypes.Quote
 	if currency != "" {
 		currency = "&currency=" + url.QueryEscape(currency)
 	}
+	if discount != "" {
+		discount = "&discount=" + url.QueryEscape(discount)
+	}
 	err := c.do(http.MethodGet,
-		fmt.Sprintf("/v1/quote?domain=%s&years=%d&kind=%s%s", domain, years, kind, currency), nil, &out)
+		fmt.Sprintf("/v1/quote?domain=%s&years=%d&kind=%s%s%s", domain, years, kind, currency, discount), nil, &out)
 	return out, err
 }
 

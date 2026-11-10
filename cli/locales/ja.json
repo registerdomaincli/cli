@@ -71,6 +71,7 @@
   "transfer.short": "ドメインを RegisterDomainCLI へ移管",
   "transfer.long": "他のレジストラからドメインを移管します。\n\n現在のレジストラが発行した移管（EPP）認証コードが必要です。移管を\n開始する前に、そのレジストラでドメインのロックを解除しておく必要が\nあります。\n\n正確な価格を表示して注文作成前に確認を求め、その後ブラウザーで決済\nページを開きます。",
   "order.confirm": "{{.Domain}}、{{.Years}} 年 — {{.Amount}} + 消費税 = {{.Total}}。続行しますか？ [y/N] ",
+  "quote.discount": "割引 {{.Code}}: −{{.Amount}}",
   "order.dryRun": "ドライラン: 注文は作成されませんでした。",
   "order.created": "注文 {{.ID}} を作成しました。",
   "order.checkoutOpen": "ブラウザーで決済ページを開いています...",

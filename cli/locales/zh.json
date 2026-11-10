@@ -71,6 +71,7 @@
   "transfer.short": "将域名转移到 RegisterDomainCLI",
   "transfer.long": "从其他注册商转移域名。\n\n需要当前注册商提供的转移（EPP）授权码。在开始转移之前，必须先在\n原注册商处解锁该域名。\n\n先显示准确价格并在创建订单前请求确认，然后在浏览器中打开结账页面。",
   "order.confirm": "{{.Domain}}，{{.Years}} 年 — {{.Amount}} + 增值税 = {{.Total}}。是否继续？[y/N] ",
+  "quote.discount": "优惠 {{.Code}}：−{{.Amount}}",
   "order.dryRun": "试运行：未创建任何订单。",
   "order.created": "订单 {{.ID}} 已创建。",
   "order.checkoutOpen": "正在浏览器中打开结账页面……",

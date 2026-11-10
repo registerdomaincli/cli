@@ -71,6 +71,7 @@
   "transfer.short": "Domain zu RegisterDomainCLI transferieren",
   "transfer.long": "Transferiert eine Domain von einem anderen Registrar.\n\nErforderlich ist der Transfer-Code (EPP) des aktuellen Registrars. Die\nDomain muss dort entsperrt sein, bevor der Transfer starten kann.\n\nZeigt zuerst den genauen Preis an und fragt vor dem Aufgeben der\nBestellung nach Bestätigung, öffnet dann die Bezahlseite in Ihrem\nBrowser.",
   "order.confirm": "{{.Domain}}, {{.Years}} Jahr(e) — {{.Amount}} + MwSt. = {{.Total}}. Fortfahren? [y/N] ",
+  "quote.discount": "Rabatt {{.Code}}: −{{.Amount}}",
   "order.dryRun": "Probelauf: Es wurde keine Bestellung erstellt.",
   "order.created": "Bestellung {{.ID}} erstellt.",
   "order.checkoutOpen": "Bezahlseite wird in Ihrem Browser geöffnet...",

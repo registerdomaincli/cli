@@ -92,28 +92,43 @@ type SearchResponse struct {
 
 // Quote is the real pre-order price returned by GET /v1/quote. NetCents is
 // the tax-exclusive charge (upstream price for the requested term plus
-// markup). TaxCents is the VAT computed by the server from the buyer's
-// billing data; TotalCents is the exact amount charged at checkout.
+// markup, minus any discount). TaxCents is the VAT computed by the server
+// from the buyer's billing data on the DISCOUNTED net; TotalCents is the
+// exact amount charged at checkout.
 type Quote struct {
-	Domain        string  `json:"domain"`
-	Years         int     `json:"years"`
-	Kind          string  `json:"kind"` // registration | renewal | transfer
-	Premium       bool    `json:"premium"`
-	UpstreamPrice float64 `json:"upstreamPrice"`
-	NetCents      int64   `json:"netCents"`
-	TaxCents      int64   `json:"taxCents"`
-	TotalCents    int64   `json:"totalCents"`
-	Currency      string  `json:"currency"`
+	Domain        string       `json:"domain"`
+	Years         int          `json:"years"`
+	Kind          string       `json:"kind"` // registration | renewal | transfer
+	Premium       bool         `json:"premium"`
+	UpstreamPrice float64      `json:"upstreamPrice"`
+	NetCents      int64        `json:"netCents"`
+	TaxCents      int64        `json:"taxCents"`
+	TotalCents    int64        `json:"totalCents"`
+	Currency      string       `json:"currency"`
+	Discount      *DiscountApp `json:"discount,omitempty"` // set only when a code was requested and accepted
+}
+
+// DiscountApp is the discount a server accepted on a quote or an order: the
+// code as normalized server-side (case-insensitive match), what was taken
+// off the net, and the currency of that amount. Percent-kind discounts carry
+// Percent and a server-computed AmountCents; fixed-kind leave Percent empty.
+// The client never calculates discounts itself — it displays AmountCents.
+type DiscountApp struct {
+	Code        string `json:"code"`
+	Percent     string `json:"percent,omitempty"` // kind=percent, e.g. "10.00"
+	AmountCents int64  `json:"amountCents"`       // actual cents taken off the net
+	Currency    string `json:"currency"`
 }
 
 // QuoteRequest is the body of POST /v1/quotes: one quote for a whole list
 // of domains. All domains share one kind and one currency; per-domain
 // years are allowed (0 inherits the top-level Years).
 type QuoteRequest struct {
-	Kind     string           `json:"kind,omitempty"` // registration | renewal | transfer; default registration
-	Years    int              `json:"years,omitempty"`
-	Domains  []QuoteItemInput `json:"domains"`
-	Currency string           `json:"currency,omitempty"` // ISO 4217, lowercase; empty = server default
+	Kind         string           `json:"kind,omitempty"` // registration | renewal | transfer; default registration
+	Years        int              `json:"years,omitempty"`
+	Domains      []QuoteItemInput `json:"domains"`
+	Currency     string           `json:"currency,omitempty"`     // ISO 4217, lowercase; empty = server default
+	DiscountCode string           `json:"discountCode,omitempty"` // optional; validated server-side
 }
 
 // QuoteItemInput is one domain inside a QuoteRequest.
@@ -124,12 +139,16 @@ type QuoteItemInput struct {
 
 // QuoteResponse is the envelope of POST /v1/quotes: per-domain quotes plus
 // the order-level totals the checkout will charge (VAT is order-level).
+// Discount, when set, is already reflected in NetCents; the per-domain
+// Quotes rows keep their undiscounted NetCents — the discount is an
+// order-level adjustment, not per-domain.
 type QuoteResponse struct {
-	Quotes     []Quote `json:"quotes"`
-	NetCents   int64   `json:"netCents"`
-	TaxCents   int64   `json:"taxCents"`
-	TotalCents int64   `json:"totalCents"`
-	Currency   string  `json:"currency"`
+	Quotes     []Quote      `json:"quotes"`
+	NetCents   int64        `json:"netCents"`
+	TaxCents   int64        `json:"taxCents"`
+	TotalCents int64        `json:"totalCents"`
+	Currency   string       `json:"currency"`
+	Discount   *DiscountApp `json:"discount,omitempty"` // order-level; see Quote.Discount
 }
 
 // Registrant is the WHOIS registrant contact. Organization, Address2 and
@@ -161,7 +180,8 @@ type CreateOrderRequest struct {
 	Years        int              `json:"years,omitempty"`
 	Items        []OrderItemInput `json:"items,omitempty"` // multi-domain form; wins when set
 	AuthCode     string           `json:"authCode,omitempty"`
-	Currency     string           `json:"currency,omitempty"` // ISO 4217, lowercase; empty = server default
+	Currency     string           `json:"currency,omitempty"`     // ISO 4217, lowercase; empty = server default
+	DiscountCode string           `json:"discountCode,omitempty"` // optional; revalidated server-side at order time
 	Registrant   *Registrant      `json:"registrant,omitempty"`
 	ContactSetID string           `json:"contactSetId,omitempty"`
 }
@@ -191,21 +211,22 @@ type OrderItem struct {
 // InvoiceURL is a pre-signed absolute URL (24 h validity) so it can be opened
 // in a browser that carries no Authorization header.
 type Order struct {
-	ID            string      `json:"id"`
-	Kind          string      `json:"kind"`
-	Domain        string      `json:"domain"`
-	Items         []OrderItem `json:"items,omitempty"` // per-domain lines on multi-domain orders
-	Years         int         `json:"years"`
-	NetCents      int64       `json:"netCents"`
-	TaxCents      int64       `json:"taxCents"`
-	TotalCents    int64       `json:"totalCents"`
-	Currency      string      `json:"currency"`
-	Status        string      `json:"status"` // pending_payment | paid | processing | completed | failed | refunded | expired | cancelled
-	CheckoutURL   string      `json:"checkoutUrl"`
-	InvoiceNumber string      `json:"invoiceNumber,omitempty"`
-	InvoiceURL    string      `json:"invoiceUrl,omitempty"`
-	FailureReason string      `json:"failureReason,omitempty"`
-	CreatedAt     time.Time   `json:"createdAt"`
+	ID            string       `json:"id"`
+	Kind          string       `json:"kind"`
+	Domain        string       `json:"domain"`
+	Items         []OrderItem  `json:"items,omitempty"` // per-domain lines on multi-domain orders
+	Years         int          `json:"years"`
+	NetCents      int64        `json:"netCents"`
+	TaxCents      int64        `json:"taxCents"`
+	TotalCents    int64        `json:"totalCents"`
+	Currency      string       `json:"currency"`
+	Discount      *DiscountApp `json:"discount,omitempty"` // the accepted discount, already in NetCents
+	Status        string       `json:"status"`             // pending_payment | paid | processing | completed | failed | refunded | expired | cancelled
+	CheckoutURL   string       `json:"checkoutUrl"`
+	InvoiceNumber string       `json:"invoiceNumber,omitempty"`
+	InvoiceURL    string       `json:"invoiceUrl,omitempty"`
+	FailureReason string       `json:"failureReason,omitempty"`
+	CreatedAt     time.Time    `json:"createdAt"`
 }
 
 // SignupResponse acknowledges that the verification email was sent. The
