@@ -27,6 +27,12 @@ var jsonFlag bool
 // human approved.
 var yesFlag bool
 
+// newPaymentMethodFlag is the per-order --new-payment-method flag: an
+// explicit opt-out of charging the saved payment method (the order then
+// goes through the hosted checkout, where the customer can pay with a new
+// card). Read by orderFlow off the invoking command's flags.
+var newPaymentMethodFlag bool
+
 // stdinIsTTY reports whether the command's input source is an interactive
 // terminal. Piped/redirected stdin (agents, CI, tests) means: no prompts,
 // parameters only. The check is on the prompter's reader (cobra's In), not

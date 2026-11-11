@@ -366,3 +366,46 @@ func newBillingPortalCmd(app *App) *cobra.Command {
 		},
 	}
 }
+
+// newPaymentMethodsCmd lists the saved payment methods behind the
+// off-session fast checkout. Agents check it before placing an order so
+// they can ask the human which rail to pay on; removing a method happens in
+// the web panel's payment page (the server exposes DELETE, but the CLI
+// stays read-only on revoking consent).
+func newPaymentMethodsCmd(app *App) *cobra.Command {
+	return &cobra.Command{
+		Use:   "payment-methods",
+		Short: i18n.T("paymentmethods.short"),
+		Long:  i18n.T("paymentmethods.long"),
+		Args:  exactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			c, err := app.requireClient()
+			if err != nil {
+				return err
+			}
+			resp, err := c.PaymentMethods()
+			if err != nil {
+				return fail(err)
+			}
+			if jsonFlag {
+				return emitJSON(cmd, resp)
+			}
+			out := cmd.OutOrStdout()
+			if len(resp.Methods) == 0 {
+				fmt.Fprintln(out, i18n.T("paymentmethods.empty"))
+				return nil
+			}
+			rows := make([][]string, 0, len(resp.Methods))
+			for _, m := range resp.Methods {
+				rows = append(rows, []string{m.ID, m.Method, m.Details, m.Status})
+			}
+			printTable(out, []string{
+				i18n.T("paymentmethods.hdr.id"),
+				i18n.T("paymentmethods.hdr.method"),
+				i18n.T("paymentmethods.hdr.details"),
+				i18n.T("paymentmethods.hdr.status"),
+			}, rows)
+			return nil
+		},
+	}
+}

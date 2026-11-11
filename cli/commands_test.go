@@ -323,12 +323,127 @@ func TestRegisterFullyParametric(t *testing.T) {
 	}
 }
 
+// TestRegisterSavedMethodAutopaid pins the no-checkout contract: when the
+// server answers 201 with an empty checkoutUrl the human flow prints the
+// saved-method-charging line, never opens a browser or prints a payment URL,
+// and the order JSON still carries the empty checkoutUrl as-is.
+func TestRegisterSavedMethodAutopaid(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/v1/quote":
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{
+				Domain: "example.com", Years: 1, Kind: "registration",
+				NetCents: 1150, Currency: "EUR",
+			})
+		case r.URL.Path == "/v1/orders":
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{
+				ID: "ord-2", Kind: "registration", Domain: "example.com",
+				Status: "pending_payment", CheckoutURL: "",
+			})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	out := runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"register", "example.com",
+		"--first-name", "A", "--last-name", "B",
+		"--email", "agent@example.com", "--phone", "+34.600000000",
+		"--address1", "Street 1", "--city", "BCN", "--zip", "08001",
+		"--country", "es", "--no-wait",
+	}, "")
+	if !strings.Contains(out, "ord-2") {
+		t.Errorf("order id missing from output:\n%s", out)
+	}
+	if !strings.Contains(out, "Charging your saved payment method") {
+		t.Errorf("autopaid line missing from output:\n%s", out)
+	}
+	if strings.Contains(out, "http://checkout") || strings.Contains(out, "Open this URL") {
+		t.Errorf("autopaid order must not carry a checkout URL:\n%s", out)
+	}
+}
+
+// TestRegisterNewPaymentMethodOptOut pins the flag contract: passing
+// --new-payment-method sends useSavedMethod=false on the wire, and an order
+// that answers WITH a checkout URL is treated like any hosted checkout.
+func TestRegisterNewPaymentMethodOptOut(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var gotOrder apitypes.CreateOrderRequest
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/v1/quote":
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{
+				Domain: "example.com", Years: 1, Kind: "registration",
+				NetCents: 1150, Currency: "EUR",
+			})
+		case r.URL.Path == "/v1/orders":
+			_ = json.NewDecoder(r.Body).Decode(&gotOrder)
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{
+				ID: "ord-3", Kind: "registration", Domain: "example.com",
+				Status: "pending_payment", CheckoutURL: "http://checkout.example/3",
+			})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	out := runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"register", "example.com",
+		"--first-name", "A", "--last-name", "B",
+		"--email", "agent@example.com", "--phone", "+34.600000000",
+		"--address1", "Street 1", "--city", "BCN", "--zip", "08001",
+		"--country", "es", "--no-wait", "--new-payment-method",
+	}, "")
+	if gotOrder.UseSavedMethod == nil || *gotOrder.UseSavedMethod {
+		t.Fatalf("useSavedMethod = %v; want an explicit false on the wire", gotOrder.UseSavedMethod)
+	}
+	if !strings.Contains(out, "http://checkout.example/3") {
+		t.Errorf("checkout URL missing from output:\n%s", out)
+	}
+	if strings.Contains(out, "Charging your saved payment method") {
+		t.Errorf("opt-out order must not print the autopaid line:\n%s", out)
+	}
+}
+
+// TestPaymentMethodsList pins the read-only listing command: human table and
+// --json passthrough, against a server that still answers 501 on this rail.
+func TestPaymentMethodsList(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/payment-methods" {
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(apitypes.PaymentMethodsResponse{Methods: []apitypes.PaymentMethod{{
+			ID: "mdt_1", Method: "creditcard", Details: "card •••• 1234, exp 12/27", Status: "valid",
+		}}})
+	})
+	out := runRoot(t, []string{"--server", s.URL, "--token", "dcl_x", "payment-methods"}, "")
+	if !strings.Contains(out, "mdt_1") || !strings.Contains(out, "1234") {
+		t.Errorf("method table missing:\n%s", out)
+	}
+	out = runRoot(t, []string{"--server", s.URL, "--token", "dcl_x", "--json", "payment-methods"}, "")
+	if !strings.Contains(out, "\"mdt_1\"") {
+		t.Errorf("json output missing method id:\n%s", out)
+	}
+}
+
 // TestRegisterNonInteractiveMissingFlags proves the non-interactive failure
 // mode: without registrant flags and without a TTY, the command fails naming
 // the flags to pass — it never hangs and never submits partial data.
 func TestRegisterNonInteractiveMissingFlags(t *testing.T) {
 	setConfigDir(t)
-	setLocale(t, "en")
 	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/v1/contact-sets", "/v1/me":

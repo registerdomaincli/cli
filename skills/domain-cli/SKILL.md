@@ -43,8 +43,20 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   access, and they never delete anything on the server.
 - **Ordering requires explicit human approval**: pass the global `--yes` only
   after the human confirmed the quoted price. Without it the command fails by
-  design. `--no-wait` returns right after order creation with the checkout
-  URL — the human completes payment in the browser asynchronously.
+  design. `--no-wait` returns right after order creation. An order normally
+  answers with a `checkoutUrl` the human completes in the browser; an order
+  answered with an **empty `checkoutUrl`** means the saved payment method is
+  being charged off-session — the order completes by itself through the
+  provider webhook, no browser involved.
+  **Saved methods — ask before relying on them**: before the first
+  `register`/`renew`/`transfer` of a session, run `domain-cli payment-methods`
+  (or `--json`). If it lists a method, tell the human and ask which they want:
+  pay with the saved one (instant, no browser — run the order normally), or
+  pay with a different one (`--new-payment-method` opens the hosted checkout,
+  which also saves the new method for next time). If none is listed, just
+  proceed. Never silently charge a saved method without the human having
+  agreed in this conversation; methods are removed in the web panel, not from
+  the CLI.
 - **Editing an order is cancel + recreate**: an unpaid order can be dropped
   with `domain-cli orders --cancel <id>` and placed again with the full
   domain list (add or remove domains by re-running `register` with the
@@ -113,19 +125,25 @@ same account, same dcl_ token, same API:
   A static `Authorization: Bearer dcl_…` header keeps working too.
 - **Tools** mirror the CLI: `whoami`, `search_domains`, `quote`,
   `quote_domains` (price several domains in one call), `create_order`
-  (`domains[]` buys several domains in ONE order: one checkout, one
-  payment), `list_orders`, `get_order`, `cancel_order`,
+  (`domains[]` buys several domains in ONE order: one payment),
+  `list_orders`, `get_order`, `cancel_order`,
   `list_domains`, `get_domain`, `set_lock`, `set_autorenew`,
   `get_auth_code`, `list_records`, `create_record`, `delete_record`,
   `get_nameservers`, `set_nameservers`, `list_contact_sets`,
-  `create_contact_set`, `get_billing`, `set_billing`.
+  `create_contact_set`, `get_billing`, `set_billing`,
+  `list_payment_methods`.
 - **confirm=true is the --yes of MCP**: `create_order`, `cancel_order`,
   `delete_record`, `set_nameservers`, `get_auth_code` refuse without
   `confirm: true`; `set_lock` needs it to unlock; `set_autorenew` needs it
   to enable. Ask the human in chat first, exactly as with `--yes`.
-- **Payment is still human-only**: `create_order` returns `checkoutUrl`
-  plus a `hint` — give the URL to the human and stop. Never automate a
-  payment page, the billing portal, or invoices.
+- **Payment is a human decision**: before the first `create_order` of a
+  session, call `list_payment_methods`. If one is saved, ask the human:
+  charge it (default — the order completes by itself, no browser), or pay
+  with something new (pass `use_saved_method: false` and `create_order`
+  returns `checkoutUrl`). Either way give the human the outcome and stop;
+  never automate a payment page, the billing portal, or invoices. An empty
+  `checkoutUrl` in the response means the saved method was charged — report
+  the order id and poll `get_order`.
 - **Signup has no MCP shortcut**: the emailed 6-digit code must still be
   typed by the human (CLI, web panel, or the `auth/signup` + `auth/verify`
   REST pair from an environment the human controls).
@@ -140,13 +158,13 @@ production).
 |---|---|
 | `domain-cli search <query> [--tlds com,net,...] [--limit N]` | Keyword search, or FQDN check when the query contains a dot. `--tlds` restricts the result to those TLDs (≤50, run `tlds` to see the catalog); `--limit` caps rows (default and ceiling 50). Prices are indicative; exact charge appears at `register`/`renew`/`transfer` confirm time. |
 | `domain-cli tlds [--group <slug>]` | List every sellable TLD with its curated intent groups (`local`, `business`, `tech`, `shop`, `creative`, `org`). `--group` filters the list. Use it to translate "domains in the user's region" into an exact `--tlds` set. |
-| `domain-cli register <domain...> [--years N] [--own-contact \| --contact <label>] [--dry-run]` | Quote → confirm → order → checkout in the human's browser → polls until paid/failed. With SEVERAL domains they go into ONE order (one checkout, one payment, one invoice with a line per domain). Prompts for registrant when no default contact set exists; offers to save it. |
-| `domain-cli renew <domain> [--years N]` | Same flow with `kind=renewal`. |
-| `domain-cli transfer <domain> --auth-code <code> [--contact <label>] [--own-contact]` | Same flow with `kind=transfer`. Transfers take up to 7 days; watch `domain-cli orders`. |
+| `domain-cli register <domain...> [--years N] [--own-contact \| --contact <label>] [--new-payment-method] [--dry-run]` | Quote → confirm → order → checkout in the human's browser → polls until paid/failed. With a saved payment method and no `--new-payment-method` the order is charged instantly (empty `checkoutUrl`, no browser). With SEVERAL domains they go into ONE order (one payment, one invoice with a line per domain). Prompts for registrant when no default contact set exists; offers to save it. |
+| `domain-cli renew <domain> [--years N] [--new-payment-method]` | Same flow with `kind=renewal`. |
+| `domain-cli transfer <domain> --auth-code <code> [--contact <label>] [--own-contact] [--new-payment-method]` | Same flow with `kind=transfer`. Transfers take up to 7 days; watch `domain-cli orders`. |
 | `domain-cli orders [--cancel <id>]` | List orders (status, invoice number, checkout URL) or cancel an open order. |
 | `domain-cli invoice <orderId>` | Opens the order's pre-signed invoice URL in the browser and prints it. |
 | `domain-cli contacts add <label> \| list \| show <label> \| default <label> \| remove <label>` | Manage saved registrant contact sets. |
-| `domain-cli billing show \| set \| portal` | View/edit the invoice billing profile; open the hosted billing portal. |
+| `domain-cli payment-methods` | List the saved payment methods that power the no-browser fast checkout. Check this before the first order of a session and ask the human which rail to pay on; `--new-payment-method` on the order forces the hosted checkout instead. |
 | `domain-cli legal [notice\|privacy\|terms\|cookies]` | Open a legal document (default `notice`). |
 | `domain-cli domains` | List owned domains (expiry, autorenew, privacy, lock). |
 | `domain-cli domains authcode <domain>` | Print the transfer (EPP) code. Asks for confirmation; the domain must be unlocked first (`domains unlock`). |
@@ -160,7 +178,7 @@ production).
 | `domain-cli logout` | Revoke this machine's stored token and forget the sign-in. |
 | `domain-cli account list \| switch <email> \| remove <email> \| delete` | List saved sign-ins, switch between them, revoke-and-forget one, or delete the account entirely. |
 
-## Payment ALWAYS requires a human in the browser
+## Payment ALWAYS requires a human decision — and usually a human in the browser
 
 **The agent must print the checkout URL and stop. Never attempt to open,
 automate, fill, or complete a payment page yourself** — checkout is a
@@ -169,9 +187,20 @@ applies to `billing portal` and `invoice`. `register`/`renew`/`transfer`
 already do the right thing: they open the browser (or print the URL over
 SSH) and poll the order status.
 
-`domains autorenew on` commits the user to a recurring annual charge on
-their saved payment method — always confirm with the human before running
-it for them.
+Two sanctioned exceptions where no browser is involved, both because the
+human already consented to THAT charge in this conversation:
+
+- The order was confirmed (`--yes` after the human approved the exact price)
+  AND the human chose to pay with the saved method (see the ask-first rule
+  above): the order answers with an empty `checkoutUrl`, the saved method is
+  charged off-session, and the provider webhook completes the order.
+- `domains autorenew on` commits the user to a recurring annual charge on
+  their saved payment method — always confirm with the human before running
+  it for them.
+
+Anything beyond that — retries after a decline, charges "to try if it
+works", or re-running an order that already consumed the saved method — is
+forbidden without a fresh, explicit human instruction.
 
 `domains unlock` and `domains authcode` are the two halves of the
 transfer-away path: together they let the domain be moved to another

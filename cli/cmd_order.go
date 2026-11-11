@@ -84,6 +84,7 @@ func newRegisterCmd(app *App) *cobra.Command {
 	cmd.Flags().StringVar(&saveContact, "save-contact", "", "save the inline registrant as a contact set with this label (no prompt)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show the price and stop before creating the order")
 	cmd.Flags().BoolVar(&noWait, "no-wait", false, "print the order id + checkout URL and exit (complete payment asynchronously)")
+	cmd.Flags().BoolVar(&newPaymentMethodFlag, "new-payment-method", false, "pay with a new payment method even if one is saved (skips the fast no-browser checkout)")
 	cmd.Flags().StringVar(&discount, "discount", "", "apply the discount code with this name to the order")
 	addRegistrantFlags(cmd, &rf)
 	return cmd
@@ -110,6 +111,7 @@ func newRenewCmd(app *App) *cobra.Command {
 	cmd.Flags().IntVarP(&years, "years", "y", 1, "years to renew (1-10)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show the price and stop before creating the order")
 	cmd.Flags().BoolVar(&noWait, "no-wait", false, "print the order id + checkout URL and exit")
+	cmd.Flags().BoolVar(&newPaymentMethodFlag, "new-payment-method", false, "pay with a new payment method even if one is saved (skips the fast no-browser checkout)")
 	cmd.Flags().StringVar(&discount, "discount", "", "apply the discount code with this name to the order")
 	return cmd
 }
@@ -155,8 +157,8 @@ func newTransferCmd(app *App) *cobra.Command {
 	cmd.Flags().StringVar(&authCode, "auth-code", "", "EPP/auth code from the losing registrar (required)")
 	cmd.Flags().StringVar(&contact, "contact", "", "use the saved contact set with this label")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show the price and stop before creating the order")
+	cmd.Flags().BoolVar(&newPaymentMethodFlag, "new-payment-method", false, "pay with a new payment method even if one is saved (skips the fast no-browser checkout)")
 	cmd.Flags().StringVar(&discount, "discount", "", "apply the discount code with this name to the order")
-	addRegistrantFlags(cmd, &rf)
 	return cmd
 }
 

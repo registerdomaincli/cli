@@ -334,6 +334,15 @@ func (c *Client) Billing() (apitypes.BillingProfile, error) {
 	return out, err
 }
 
+// PaymentMethods lists the saved payment methods (the panel's payment
+// page data). On Stripe the server answers 501 portal_managed — cards are
+// managed in the Stripe Billing Portal there.
+func (c *Client) PaymentMethods() (apitypes.PaymentMethodsResponse, error) {
+	var out apitypes.PaymentMethodsResponse
+	err := c.do(http.MethodGet, "/v1/payment-methods", nil, &out)
+	return out, err
+}
+
 // UpdateBilling replaces the billing profile.
 func (c *Client) UpdateBilling(p apitypes.BillingProfile) (apitypes.BillingProfile, error) {
 	var out apitypes.BillingProfile
