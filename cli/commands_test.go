@@ -1947,3 +1947,122 @@ func TestTransferSendsOneYearOnWire(t *testing.T) {
 		t.Errorf("order id missing from output:\n%s", out)
 	}
 }
+
+// TestTransferParametricRegistrantAndNoWait pins the SKILL.md contract for
+// transfer: the full registrant flag set is accepted and rides inline on the
+// order (no contact set id), and --no-wait returns right after order
+// creation instead of polling.
+func TestTransferParametricRegistrantAndNoWait(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var gotOrder apitypes.CreateOrderRequest
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/quote":
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{
+				Domain: "example.com", Years: 1, Kind: "transfer",
+				NetCents: 1099, TaxCents: 231, TotalCents: 1330, Currency: "EUR",
+			})
+		case "/v1/orders":
+			_ = json.NewDecoder(r.Body).Decode(&gotOrder)
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{
+				ID: "ord-t2", Kind: "transfer", Domain: "example.com",
+				Status: "pending_payment", CheckoutURL: "http://checkout.example/t2",
+			})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	out := runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"transfer", "example.com", "--auth-code", "EPP123", "--no-wait",
+		"--first-name", "A", "--last-name", "B", "--email", "agent@example.com",
+		"--phone", "+34.600000000", "--address1", "Street 1", "--city", "BCN",
+		"--zip", "08001", "--country", "es",
+	}, "")
+	if gotOrder.Registrant == nil {
+		t.Fatal("order registrant missing")
+	}
+	if gotOrder.Registrant.Country != "ES" || gotOrder.Registrant.Email != "agent@example.com" {
+		t.Errorf("registrant not taken from flags: %+v", gotOrder.Registrant)
+	}
+	if gotOrder.ContactSetID != "" {
+		t.Errorf("inline registrant must not carry a contact set id, got %q", gotOrder.ContactSetID)
+	}
+	if !strings.Contains(out, "ord-t2") {
+		t.Errorf("order id missing from output:\n%s", out)
+	}
+}
+
+// TestTransferJSONNoWaitIsPureJSON pins the agent contract flagged in review:
+// transfer --json --no-wait emits ONLY the order object — no explainer note
+// after it, so the whole output parses as JSON.
+func TestTransferJSONNoWaitIsPureJSON(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/quote":
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{
+				Domain: "example.com", Years: 1, Kind: "transfer",
+				NetCents: 1099, TaxCents: 231, TotalCents: 1330, Currency: "EUR",
+			})
+		case "/v1/contact-sets":
+			_ = json.NewEncoder(w).Encode(apitypes.ContactSetsResponse{ContactSets: []apitypes.ContactSet{{
+				ID: "cs1", Label: "main", IsDefault: true,
+				Registrant: apitypes.Registrant{FirstName: "A", LastName: "B"},
+			}}})
+		case "/v1/orders":
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{
+				ID: "ord-t3", Kind: "transfer", Domain: "example.com",
+				Status: "pending_payment", CheckoutURL: "http://checkout.example/t3",
+			})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	out := runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes", "--json",
+		"transfer", "example.com", "--auth-code", "EPP123", "--no-wait",
+	}, "")
+	var ord apitypes.Order
+	if err := json.Unmarshal([]byte(out), &ord); err != nil {
+		t.Fatalf("output is not pure JSON: %v\n%s", err, out)
+	}
+	if ord.ID != "ord-t3" {
+		t.Errorf("order id = %q, want ord-t3", ord.ID)
+	}
+}
+
+// TestTransferOwnContactNeedsTTY pins the review gate: --own-contact on a
+// non-TTY stdin fails naming the parametric flags — it never blocks on a
+// pipe nor proceeds with empty registrant fields.
+func TestTransferOwnContactNeedsTTY(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	var orderPosted atomic.Bool
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/orders" {
+			orderPosted.Store(true)
+		}
+		w.WriteHeader(http.StatusNotFound)
+	})
+	out := runRootErr(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"transfer", "example.com", "--auth-code", "EPP123", "--own-contact",
+	})
+	for _, want := range []string{"--first-name", "--country"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("error missing %q:\n%s", want, out)
+		}
+	}
+	if orderPosted.Load() {
+		t.Error("an order was posted despite the missing-contact rejection")
+	}
+}

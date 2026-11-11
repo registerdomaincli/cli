@@ -241,6 +241,13 @@ func resolveRegistrant(cmd *cobra.Command, app *App, ownContact bool, contactLab
 	}
 	switch {
 	case ownContact:
+		// --own-contact means interactive input; without a TTY there is no
+		// one to answer — fail naming the parametric flags instead of
+		// blocking on a pipe or proceeding with empty fields.
+		if !app.p.stdinIsTTY() {
+			return nil, "", false, missingFlags("--first-name", "--last-name",
+				"--email", "--phone", "--address1", "--city", "--zip", "--country")
+		}
 		email := ""
 		if me, err := c.Me(); err == nil {
 			email = me.Email
@@ -295,15 +302,15 @@ func resolveRegistrantForOrder(cmd *cobra.Command, app *App, ownContact bool, co
 }
 
 // resolveRegistrantForTransfer is the transfer variant: contacts are
-// mandatory there too, and without registrant flags on a non-TTY stdin the
-// command fails naming them (never a silent default that would make someone
-// else the registrant).
-func resolveRegistrantForTransfer(cmd *cobra.Command, app *App, contactLabel string, rf *registrantFlags) (*apitypes.Registrant, string, bool, error) {
+// mandatory there too, and without registrant flags (or --own-contact, or a
+// saved set) on a non-TTY stdin the command fails naming them (never a
+// silent default that would make someone else the registrant).
+func resolveRegistrantForTransfer(cmd *cobra.Command, app *App, ownContact bool, contactLabel string, rf *registrantFlags) (*apitypes.Registrant, string, bool, error) {
 	if rf.any() {
 		reg, err := rf.build()
 		return reg, "", false, err
 	}
-	return resolveRegistrant(cmd, app, false, contactLabel)
+	return resolveRegistrant(cmd, app, ownContact, contactLabel)
 }
 
 // dryRunFlag / noWaitFlag read the order-flow flags off any command.
