@@ -153,7 +153,9 @@ func newTransferCmd(app *App) *cobra.Command {
 				return err
 			}
 			if created {
-				fmt.Fprintln(cmd.OutOrStdout(), i18n.T("transfer.explainer"))
+				if !jsonFlag {
+					fmt.Fprintln(cmd.OutOrStdout(), i18n.T("transfer.note"))
+				}
 				maybeSaveContactSet(cmd, app, reg, prompted)
 			}
 			return nil

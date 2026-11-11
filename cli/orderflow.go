@@ -241,6 +241,13 @@ func resolveRegistrant(cmd *cobra.Command, app *App, ownContact bool, contactLab
 	}
 	switch {
 	case ownContact:
+		// --own-contact means interactive input; without a TTY there is no
+		// one to answer — fail naming the parametric flags instead of
+		// blocking on a pipe or proceeding with empty fields.
+		if !app.p.stdinIsTTY() {
+			return nil, "", false, missingFlags("--first-name", "--last-name",
+				"--email", "--phone", "--address1", "--city", "--zip", "--country")
+		}
 		email := ""
 		if me, err := c.Me(); err == nil {
 			email = me.Email
