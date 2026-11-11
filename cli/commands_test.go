@@ -2046,10 +2046,10 @@ func TestTransferJSONNoWaitIsPureJSON(t *testing.T) {
 func TestTransferOwnContactNeedsTTY(t *testing.T) {
 	setConfigDir(t)
 	setLocale(t, "en")
-	var orderPosted bool
+	var orderPosted atomic.Bool
 	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/v1/orders" {
-			orderPosted = true
+			orderPosted.Store(true)
 		}
 		w.WriteHeader(http.StatusNotFound)
 	})
@@ -2062,7 +2062,7 @@ func TestTransferOwnContactNeedsTTY(t *testing.T) {
 			t.Errorf("error missing %q:\n%s", want, out)
 		}
 	}
-	if orderPosted {
+	if orderPosted.Load() {
 		t.Error("an order was posted despite the missing-contact rejection")
 	}
 }
