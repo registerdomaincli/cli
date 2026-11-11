@@ -23,14 +23,23 @@ var (
 // was actually created.
 //
 // Non-interactive (agents): --yes approves placement, --no-wait returns right
-// after the order is created (the checkout URL is printed for the human), and
-// without --yes on a non-TTY stdin the command fails naming the flag — the
-// human-approval gate never silently passes.
+// after the order is created (the checkout URL is printed for the human; an
+// empty checkoutUrl means the saved payment method is being charged and the
+// order completes through the provider webhook), and without --yes on a
+// non-TTY stdin the command fails naming the flag — the human-approval gate
+// never silently passes.
 func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dryRun bool, noWait bool) (bool, error) {
 	out := cmd.OutOrStdout()
 	// The requested currency rides on both the quote and the order so the
 	// server prices, records and charges in one currency.
 	req.Currency = app.Currency
+	// --new-payment-method opts out of the saved-method fast checkout: the
+	// wire tri-state is a pointer so an explicit false still serializes and
+	// the server answers with a hosted checkout even when a method exists.
+	if v, ferr := cmd.Flags().GetBool("new-payment-method"); ferr == nil && v {
+		falsely := false
+		req.UseSavedMethod = &falsely
+	}
 	var lastQuoteResponse *apitypes.QuoteResponse
 	if len(req.Items) == 0 {
 		quote, err := app.Client.Quote(req.Domain, req.Years, req.Kind, app.Currency, req.DiscountCode)
@@ -130,9 +139,14 @@ func orderFlow(cmd *cobra.Command, app *App, req apitypes.CreateOrderRequest, dr
 	}
 	if !jsonFlag {
 		fmt.Fprintln(out, i18n.T("order.created", "ID", ord.ID))
-		if stdoutIsTTY() && openBrowser(ord.CheckoutURL) {
+		switch {
+		case ord.CheckoutURL == "":
+			// No hosted checkout: the server is charging the saved payment
+			// method; its webhook drives the order to paid/completed.
+			fmt.Fprintln(out, i18n.T("order.autopaid"))
+		case stdoutIsTTY() && openBrowser(ord.CheckoutURL):
 			fmt.Fprintln(out, i18n.T("order.checkoutOpen"))
-		} else {
+		default:
 			fmt.Fprintln(out, i18n.T("order.checkoutUrl", "URL", ord.CheckoutURL))
 		}
 	}

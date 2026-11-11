@@ -173,17 +173,28 @@ type Registrant struct {
 // "registration". A single order may carry ONE domain (Domain/Years, the
 // legacy shape) or a LIST of domains (Items) sharing the kind, currency,
 // registrant and payment. One checkout charges everything; fulfilment is
-// per item.
+// per item. AuthCode is required for transfers; a Registrant (inline, via
+// ContactSetID, or the user's default set) is required for registration and
+// transfer. Years is 1-10 for registration/renewal and ignored for
+// transfers (a gTLD transfer adds exactly one year).
+//
+// UseSavedMethod is a tri-state (pointer, so false still serializes): nil
+// means the default — when the customer has a saved payment method the
+// server charges it off-session and the order completes through the
+// provider webhook (checkoutUrl comes back empty); false forces the hosted
+// checkout even when a method is saved, which is how a customer pays with a
+// NEW card. It is never possible to charge without one of the two paths.
 type CreateOrderRequest struct {
-	Kind         string           `json:"kind,omitempty"`
-	Domain       string           `json:"domain"`
-	Years        int              `json:"years,omitempty"`
-	Items        []OrderItemInput `json:"items,omitempty"` // multi-domain form; wins when set
-	AuthCode     string           `json:"authCode,omitempty"`
-	Currency     string           `json:"currency,omitempty"`     // ISO 4217, lowercase; empty = server default
-	DiscountCode string           `json:"discountCode,omitempty"` // optional; revalidated server-side at order time
-	Registrant   *Registrant      `json:"registrant,omitempty"`
-	ContactSetID string           `json:"contactSetId,omitempty"`
+	Kind           string           `json:"kind,omitempty"`
+	Domain         string           `json:"domain"`
+	Years          int              `json:"years,omitempty"`
+	Items          []OrderItemInput `json:"items,omitempty"` // multi-domain form; wins when set
+	AuthCode       string           `json:"authCode,omitempty"`
+	Currency       string           `json:"currency,omitempty"`     // ISO 4217, lowercase; empty = server default
+	DiscountCode   string           `json:"discountCode,omitempty"` // optional; revalidated server-side at order time
+	Registrant     *Registrant      `json:"registrant,omitempty"`
+	ContactSetID   string           `json:"contactSetId,omitempty"`
+	UseSavedMethod *bool            `json:"useSavedMethod,omitempty"`
 }
 
 // OrderItemInput is one domain inside a multi-domain order. Years 0
