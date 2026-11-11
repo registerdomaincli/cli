@@ -136,8 +136,12 @@ func newTransferCmd(app *App) *cobra.Command {
 				return err
 			}
 			req := apitypes.CreateOrderRequest{
+				// A gTLD transfer adds exactly one year; the server ignores
+				// order years for transfers but the GET quote validates
+				// them, so send the term explicitly.
 				Kind:         "transfer",
 				Domain:       args[0],
+				Years:        1,
 				AuthCode:     authCode,
 				Registrant:   reg,
 				ContactSetID: setID,
