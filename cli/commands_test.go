@@ -1947,3 +1947,52 @@ func TestTransferSendsOneYearOnWire(t *testing.T) {
 		t.Errorf("order id missing from output:\n%s", out)
 	}
 }
+
+// TestTransferParametricRegistrantAndNoWait pins the SKILL.md contract for
+// transfer: the full registrant flag set is accepted and rides inline on the
+// order (no contact set id), and --no-wait returns right after order
+// creation instead of polling.
+func TestTransferParametricRegistrantAndNoWait(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var gotOrder apitypes.CreateOrderRequest
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/quote":
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{
+				Domain: "example.com", Years: 1, Kind: "transfer",
+				NetCents: 1099, TaxCents: 231, TotalCents: 1330, Currency: "EUR",
+			})
+		case "/v1/orders":
+			_ = json.NewDecoder(r.Body).Decode(&gotOrder)
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{
+				ID: "ord-t2", Kind: "transfer", Domain: "example.com",
+				Status: "pending_payment", CheckoutURL: "http://checkout.example/t2",
+			})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	out := runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"transfer", "example.com", "--auth-code", "EPP123", "--no-wait",
+		"--first-name", "A", "--last-name", "B", "--email", "agent@example.com",
+		"--phone", "+34.600000000", "--address1", "Street 1", "--city", "BCN",
+		"--zip", "08001", "--country", "es",
+	}, "")
+	if gotOrder.Registrant == nil {
+		t.Fatal("order registrant missing")
+	}
+	if gotOrder.Registrant.Country != "ES" || gotOrder.Registrant.Email != "agent@example.com" {
+		t.Errorf("registrant not taken from flags: %+v", gotOrder.Registrant)
+	}
+	if gotOrder.ContactSetID != "" {
+		t.Errorf("inline registrant must not carry a contact set id, got %q", gotOrder.ContactSetID)
+	}
+	if !strings.Contains(out, "ord-t2") {
+		t.Errorf("order id missing from output:\n%s", out)
+	}
+}

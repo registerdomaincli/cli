@@ -119,6 +119,7 @@ func newRenewCmd(app *App) *cobra.Command {
 func newTransferCmd(app *App) *cobra.Command {
 	var contact string
 	var authCode string
+	var ownContact bool
 	var rf registrantFlags
 	var dryRun, noWait bool
 	var discount string
@@ -131,7 +132,7 @@ func newTransferCmd(app *App) *cobra.Command {
 			if strings.TrimSpace(authCode) == "" {
 				return missingFlags("--auth-code")
 			}
-			reg, setID, prompted, err := resolveRegistrantForTransfer(cmd, app, contact, &rf)
+			reg, setID, prompted, err := resolveRegistrantForTransfer(cmd, app, ownContact, contact, &rf)
 			if err != nil {
 				return err
 			}
@@ -160,9 +161,12 @@ func newTransferCmd(app *App) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&authCode, "auth-code", "", "EPP/auth code from the losing registrar (required)")
 	cmd.Flags().StringVar(&contact, "contact", "", "use the saved contact set with this label")
+	cmd.Flags().BoolVar(&ownContact, "own-contact", false, "enter the registrant contact inline")
+	cmd.Flags().BoolVar(&noWait, "no-wait", false, "print the order id + checkout URL and exit (complete payment asynchronously)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show the price and stop before creating the order")
 	cmd.Flags().BoolVar(&newPaymentMethodFlag, "new-payment-method", false, "pay with a new payment method even if one is saved (skips the fast no-browser checkout)")
 	cmd.Flags().StringVar(&discount, "discount", "", "apply the discount code with this name to the order")
+	addRegistrantFlags(cmd, &rf)
 	return cmd
 }
 
