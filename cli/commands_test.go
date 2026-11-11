@@ -1882,3 +1882,68 @@ func TestLoginLocalizesARateLimitedRevocation(t *testing.T) {
 		t.Errorf("the hard-coded English detail reached a Catalan warning, output:\n%s", out)
 	}
 }
+
+// TestTransferSendsOneYearOnWire pins the transfer contract end to end: the
+// GET quote carries years=1 kind=transfer (a gTLD transfer adds exactly one
+// year; the server validates the term even though it ignores it), the echoed
+// confirm line shows the server's term, and the order body carries Years 1
+// with the auth code. No --years flag exists on transfer and none is needed.
+func TestTransferSendsOneYearOnWire(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var gotQuoteYears, gotQuoteKind atomic.Value
+	var gotOrder apitypes.CreateOrderRequest
+	s := fakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/quote":
+			gotQuoteYears.Store(r.URL.Query().Get("years"))
+			gotQuoteKind.Store(r.URL.Query().Get("kind"))
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{
+				Domain: "example.com", Years: 1, Kind: "transfer",
+				NetCents: 1099, TaxCents: 231, TotalCents: 1330, Currency: "EUR",
+			})
+		case "/v1/contact-sets":
+			_ = json.NewEncoder(w).Encode(apitypes.ContactSetsResponse{ContactSets: []apitypes.ContactSet{{
+				ID: "cs1", Label: "main", IsDefault: true,
+				Registrant: apitypes.Registrant{FirstName: "A", LastName: "B"},
+			}}})
+		case "/v1/orders":
+			_ = json.NewDecoder(r.Body).Decode(&gotOrder)
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{
+				ID: "ord-t1", Kind: "transfer", Domain: "example.com",
+				Status: "pending_payment", CheckoutURL: "http://checkout.example/t1",
+			})
+		case "/v1/orders/ord-t1":
+			_ = json.NewEncoder(w).Encode(apitypes.Order{ID: "ord-t1", Status: "completed"})
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	out := runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"transfer", "example.com", "--auth-code", "EPP123",
+	}, "")
+	if got, _ := gotQuoteYears.Load().(string); got != "1" {
+		t.Errorf("quote years param = %v, want 1", got)
+	}
+	if got, _ := gotQuoteKind.Load().(string); got != "transfer" {
+		t.Errorf("quote kind param = %v, want transfer", got)
+	}
+	if gotOrder.Years != 1 {
+		t.Errorf("order Years = %d, want 1", gotOrder.Years)
+	}
+	if gotOrder.AuthCode != "EPP123" {
+		t.Errorf("order AuthCode = %q, want EPP123", gotOrder.AuthCode)
+	}
+	// With a default contact set the CLI sends ContactSetID empty — the
+	// server resolves the default set itself; only --contact sends an ID.
+	if gotOrder.ContactSetID != "" {
+		t.Errorf("order ContactSetID = %q, want empty (default set is resolved server-side)", gotOrder.ContactSetID)
+	}
+	if !strings.Contains(out, "ord-t1") {
+		t.Errorf("order id missing from output:\n%s", out)
+	}
+}
