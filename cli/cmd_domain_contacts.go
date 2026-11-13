@@ -105,7 +105,10 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 						hasDefault = true
 					}
 				}
-				if !hasDefault && app.p.stdinIsTTY() {
+				// Prompt only when NO explicit label was supplied: an
+				// explicit --contact must resolve (or fail not-found),
+				// never be silently replaced by fresh prompts.
+				if !hasDefault && contact == "" && app.p.stdinIsTTY() {
 					email := ""
 					if me, merr := c.Me(); merr == nil {
 						email = me.Email
