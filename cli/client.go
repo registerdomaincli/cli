@@ -301,7 +301,7 @@ func (c *Client) SetNameservers(domain string, ns []string) error {
 // Roles identical to the registrant report nil.
 func (c *Client) DomainContacts(domain string) (apitypes.DomainContactsResponse, error) {
 	var out apitypes.DomainContactsResponse
-	err := c.do(http.MethodGet, "/v1/domains/"+domain+"/contacts", nil, &out)
+	err := c.do(http.MethodGet, "/v1/domains/"+url.PathEscape(domain)+"/contacts", nil, &out)
 	return out, err
 }
 
@@ -310,7 +310,7 @@ func (c *Client) DomainContacts(domain string) (apitypes.DomainContactsResponse,
 // fills all four slots upstream and may surface ICANN/transfer-lock errors.
 func (c *Client) SetDomainContacts(domain string, in apitypes.UpdateDomainContactsInput) (apitypes.DomainContactsResponse, error) {
 	var out apitypes.DomainContactsResponse
-	err := c.do(http.MethodPut, "/v1/domains/"+domain+"/contacts", in, &out)
+	err := c.do(http.MethodPut, "/v1/domains/"+url.PathEscape(domain)+"/contacts", in, &out)
 	return out, err
 }
 
