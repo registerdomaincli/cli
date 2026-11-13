@@ -51,55 +51,48 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 				return showDomainContacts(cmd, c, domain)
 			}
 
-			// Resolve the new registrant (flags > --contact > default set >
-			// prompt). Reuses the order-flow resolver: same precedence, same
-			// non-interactive contract. --own-contact is not offered here.
-			reg, setRoles, setID, prompted, err := resolveRegistrantForOrder(cmd, app, false, contact, &rf)
-			if err != nil {
-				return err
-			}
-			roles, err := resolveRoles(cmd, app, &rolf, reg, prompted, setRoles)
-			if err != nil {
-				return err
-			}
-			if reg == nil {
-				// Registrant rides on the contact set: fetch it so the PUT
-				// carries the full registrant (the endpoint requires it).
-				label := contact
-				if label == "" {
-					// default set: find it
-					sets, gerr := c.ContactSets()
-					if gerr != nil {
-						return fail(gerr)
-					}
-					found := false
-					for _, s := range sets.ContactSets {
-						if s.IsDefault {
-							label, found = s.Label, true
-							break
-						}
-					}
-					if !found {
-						return missingFlags("--contact", "--first-name")
-					}
+			// Resolve the new registrant AND roles from ONE source. With
+			// --contact (or the default set) the saved set is fetched ONCE
+			// and both the registrant and its roles come from that single
+			// snapshot — a set edit or default change between requests can
+			// never mix one set's registrant with another's roles.
+			var reg *apitypes.Registrant
+			var roles *apitypes.RoleContacts
+			var prompted bool
+			if rf.any() {
+				built, berr := rf.build()
+				if berr != nil {
+					return berr
 				}
-				cs, gerr := findContactSet(c, label)
-				if gerr != nil {
-					return gerr
+				reg, prompted = built, false
+				roles, err = resolveRoles(cmd, app, &rolf, reg, prompted, nil)
+				if err != nil {
+					return err
 				}
+			} else {
+				cs, cserr := resolveContactSetForUpdate(cmd, app, contact)
+				if cserr != nil {
+					return cserr
+				}
+				prompted = false
 				reg = &cs.Registrant
-				if roles == nil {
-					roles = setRoles
+				roles, err = resolveRoles(cmd, app, &rolf, reg, prompted, cs.Roles)
+				if err != nil {
+					return err
 				}
 			}
-			_ = setID
 
 			if dryRun {
 				return emitDomainContactsPlan(cmd, domain, *reg, roles)
 			}
 
-			// Human-approval gate: contacts changes can trigger ICANN
-			// verification and a registrar transfer lock.
+			// Human-approval gate with a visible summary: contacts changes
+			// can trigger ICANN verification and a registrar transfer lock
+			// when the registrant changes — the human must see WHAT is
+			// about to be applied, not just a bare y/N.
+			fmt.Fprint(cmd.OutOrStdout(), i18n.T("domains.contacts.confirmHdr", "Domain", domain))
+			printContactFields(cmd, *reg)
+			printRoleSummary(cmd, roles)
 			confirmed, err := requireYes(cmd, app)
 			if err != nil {
 				return err
@@ -115,6 +108,12 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 			})
 			if err != nil {
 				return fail(err)
+			}
+			if err := emitJSON(cmd, out); err != nil {
+				return err
+			}
+			if jsonFlag {
+				return nil
 			}
 			printDomainContacts(cmd, out)
 			return nil
@@ -142,10 +141,71 @@ func isShow(cmd *cobra.Command, rf *registrantFlags, rolf *roleFlags, contact st
 	return len(rolf.parsed) == 0
 }
 
+// resolveContactSetForUpdate fetches ONE saved set (by label, or the
+// account default) and returns it whole: the PUT takes both the registrant
+// and the roles from this single snapshot, so a set edit or default change
+// between requests can never mix snapshots. Non-interactive without a
+// label and no default fails naming the flags — never a silent pick.
+func resolveContactSetForUpdate(cmd *cobra.Command, app *App, label string) (*apitypes.ContactSet, error) {
+	c, err := app.requireClient()
+	if err != nil {
+		return nil, err
+	}
+	sets, err := c.ContactSets()
+	if err != nil {
+		return nil, fail(err)
+	}
+	if label != "" {
+		for i := range sets.ContactSets {
+			if sets.ContactSets[i].Label == label {
+				return &sets.ContactSets[i], nil
+			}
+		}
+		return nil, errors.New(i18n.T("contacts.notFound", "Label", label))
+	}
+	for i := range sets.ContactSets {
+		if sets.ContactSets[i].IsDefault {
+			return &sets.ContactSets[i], nil
+		}
+	}
+	if !app.p.stdinIsTTY() {
+		return nil, missingFlags("--contact", "--first-name", "--last-name",
+			"--email", "--phone", "--address1", "--city", "--zip", "--country")
+	}
+	return nil, missingFlags("--contact")
+}
+
+// printRoleSummary renders the per-role lines of a plan/confirmation.
+func printRoleSummary(cmd *cobra.Command, roles *apitypes.RoleContacts) {
+	if roles == nil {
+		fmt.Fprintln(cmd.OutOrStdout(), i18n.T("domains.contacts.allInherit"))
+		return
+	}
+	for _, name := range roleNames {
+		rc := map[string]*apitypes.Registrant{
+			"admin":   roles.Admin,
+			"tech":    roles.Tech,
+			"billing": roles.Billing,
+		}[name]
+		if rc == nil {
+			fmt.Fprintln(cmd.OutOrStdout(), i18n.T("contacts.roleFrom", "Role", name, "Who", i18n.T("contacts.roleInherit")))
+			continue
+		}
+		fmt.Fprintln(cmd.OutOrStdout(), i18n.T("contacts.roleFrom", "Role", name,
+			"Who", rc.FirstName+" "+rc.LastName+" <"+rc.Email+">"))
+	}
+}
+
 func showDomainContacts(cmd *cobra.Command, c *Client, domain string) error {
 	live, err := c.DomainContacts(domain)
 	if err != nil {
 		return fail(err)
+	}
+	if err := emitJSON(cmd, live); err != nil {
+		return err
+	}
+	if jsonFlag {
+		return nil
 	}
 	printDomainContacts(cmd, live)
 	return nil
@@ -178,34 +238,21 @@ func printDomainContacts(cmd *cobra.Command, live apitypes.DomainContactsRespons
 func printContactFields(cmd *cobra.Command, r apitypes.Registrant) {
 	out := cmd.OutOrStdout()
 	fmt.Fprintf(out, "  name:     %s %s\n", r.FirstName, r.LastName)
+	fmt.Fprintf(out, "  org:      %s\n", withSpace(r.Organization))
 	fmt.Fprintf(out, "  email:    %s\n", r.Email)
 	fmt.Fprintf(out, "  phone:    %s\n", r.Phone)
 	fmt.Fprintf(out, "  address:  %s %s, %s %s, %s\n", r.Address1, withSpace(r.Address2), r.City, r.Zip, r.Country)
+	fmt.Fprintf(out, "  state:    %s\n", r.State)
 }
 
 func emitDomainContactsPlan(cmd *cobra.Command, domain string, reg apitypes.Registrant, roles *apitypes.RoleContacts) error {
+	if jsonFlag {
+		return emitJSON(cmd, apitypes.UpdateDomainContactsInput{Registrant: reg, RoleContacts: roles})
+	}
 	out := cmd.OutOrStdout()
 	fmt.Fprintln(out, i18n.T("domains.contacts.dryRunHdr", "Domain", domain))
 	printContactFields(cmd, reg)
-	if roles == nil {
-		fmt.Fprintln(out, i18n.T("domains.contacts.allInherit"))
-	} else {
-		for _, name := range roleNames {
-			rc := map[string]*apitypes.Registrant{
-				"admin":   roles.Admin,
-				"tech":    roles.Tech,
-				"billing": roles.Billing,
-			}[name]
-			if rc == nil {
-				fmt.Fprintln(out, i18n.T("contacts.roleFrom", "Role", name, "Who", i18n.T("contacts.roleInherit")))
-				continue
-			}
-			fmt.Fprintln(out, i18n.T("contacts.roleFrom", "Role", name,
-				"Who", rc.FirstName+" "+rc.LastName+" <"+rc.Email+">"))
-		}
-	}
+	printRoleSummary(cmd, roles)
 	fmt.Fprintln(out, i18n.T("domains.contacts.dryRunFoot"))
 	return nil
 }
-
-var _ = errors.New // keep errors imported if paths change
