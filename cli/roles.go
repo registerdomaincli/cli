@@ -296,7 +296,37 @@ func promptRoleContact(p *prompter, role string, reg apitypes.Registrant) apityp
 	c.Address2 = keep("role.prompt.address2", reg.Address2)
 	c.City = keep("role.prompt.city", reg.City)
 	c.State = keep("role.prompt.state", reg.State)
-	c.Zip = keep("role.prompt.zip", reg.Zip)
-	c.Country = strings.ToUpper(keep("role.prompt.country", reg.Country))
+	// Country must satisfy the same contract as the flags and the server:
+	// two ASCII letters. Enter keeps the current value unchanged (even if
+	// the registrant's own country is imperfect — the registrant itself
+	// passed validation); a typed answer must be valid or it re-asks.
+	for {
+		fmt.Fprint(p.out, i18n.T("role.prompt.country", "Role", role))
+		if reg.Country != "" {
+			fmt.Fprint(p.out, " ["+reg.Country+"]")
+		}
+		v := strings.ToUpper(p.line())
+		if v == "" || validCountryCode(v) {
+			if v == "" {
+				c.Country = reg.Country
+			} else {
+				c.Country = v
+			}
+			break
+		}
+		fmt.Fprintln(p.out, i18n.T("err.role.country", "Role", role, "Field", "country", "Value", v))
+	}
 	return c
+}
+
+// validCountryCode reports whether s is exactly two ASCII letters.
+func validCountryCode(s string) bool {
+	if len(s) != 2 {
+		return false
+	}
+	return isASCIILetter(s[0]) && isASCIILetter(s[1])
+}
+
+func isASCIILetter(b byte) bool {
+	return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
 }
