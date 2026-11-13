@@ -159,8 +159,12 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 			// can trigger ICANN verification and a registrar transfer lock
 			// when the registrant changes — the human must see WHAT is
 			// about to be applied, not just a bare y/N. In --json mode the
-			// summary stays off stdout so the output stays parseable; the
-			// approval gate still applies (--yes).
+			// summary stays off stdout so the output stays parseable, and
+			// without --yes an interactive run would silently wait for an
+			// answer nobody can see — fail naming the flag instead.
+			if jsonFlag && !yesFlag {
+				return missingFlags("--yes")
+			}
 			if !jsonFlag {
 				fmt.Fprint(cmd.OutOrStdout(), i18n.T("domains.contacts.confirmHdr", "Domain", domain))
 				printContactFields(cmd, *reg)
