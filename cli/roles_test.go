@@ -120,10 +120,13 @@ func TestRegisterRoleSpecValidation(t *testing.T) {
 	base = append(base, "--no-wait")
 	for _, tc := range []struct{ flag, spec, want string }{
 		{"--role", "owner=auto", "unknown WHOIS role"},
-		{"--role-admin", "email=x@y.z,not-a-field=1", "invalid admin contact spec"},
 		{"--role", "admin=", "invalid admin contact spec"},
 		{"--role-admin", "", "invalid admin contact spec"},
 		{"--role-tech", "   ", "invalid tech contact spec"},
+		{"--role-admin", "country=12", "country override"},
+		{"--role-admin", "country=é", "country override"},
+		{"--role-admin", "country=D", "country override"},
+		{"--role-admin", "email=", "cannot be empty"},
 	} {
 		args := append(append([]string{}, base...), tc.flag, tc.spec)
 		out := runRootErr(t, args)
@@ -261,5 +264,57 @@ func TestRegisterAutoDiscardsSetRoles(t *testing.T) {
 	runRoot(t, args, "")
 	if got.RoleContacts != nil {
 		t.Fatalf("explicit registrant spec must discard the saved bundle, got %+v", got.RoleContacts)
+	}
+}
+
+// TestRegisterPinsDefaultSetIDWithRoles pins Copilot's snapshot concern:
+// when the DEFAULT set carries roles, the order forwards BOTH the roles and
+// the set's ID — never roles-without-ID, which would let the server pair
+// those roles with a different (later-changed) default set's registrant.
+func TestRegisterPinsDefaultSetIDWithRoles(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var got apitypes.CreateOrderRequest
+	s := newRoleTestServer(t, &got)
+	s.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/contact-sets" {
+			_ = json.NewEncoder(w).Encode(apitypes.ContactSetsResponse{ContactSets: []apitypes.ContactSet{{
+				ID: "cs-default-roles", Label: "prod", IsDefault: true,
+				Registrant: apitypes.Registrant{FirstName: "D", LastName: "E", Email: "d@example.com"},
+				Roles: &apitypes.RoleContacts{
+					Admin: &apitypes.Registrant{FirstName: "Ad", LastName: "Min", Email: "admin@example.com"},
+				},
+			}}})
+			return
+		}
+		if r.URL.Path == "/v1/quote" {
+			_ = json.NewEncoder(w).Encode(apitypes.Quote{
+				Domain: "example.com", Years: 1, Kind: "registration",
+				NetCents: 1150, Currency: "EUR",
+			})
+			return
+		}
+		if r.URL.Path == "/v1/orders" {
+			_ = json.NewDecoder(r.Body).Decode(&got)
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(apitypes.Order{
+				ID: "ord-pin", Kind: "registration", Domain: "example.com",
+				Status: "pending_payment", CheckoutURL: "",
+			})
+			return
+		}
+		t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+	})
+	runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"register", "example.com", "--no-wait",
+	}, "")
+	if got.ContactSetID != "cs-default-roles" {
+		t.Fatalf("contactSetId = %q, want the pinned default set id", got.ContactSetID)
+	}
+	if got.RoleContacts == nil || got.RoleContacts.Admin == nil || got.RoleContacts.Admin.Email != "admin@example.com" {
+		t.Fatalf("roleContacts = %+v, want the default set's admin", got.RoleContacts)
 	}
 }

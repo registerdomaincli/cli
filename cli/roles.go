@@ -131,7 +131,8 @@ func parseRoleSpec(name, spec string) (string, map[string]string, error) {
 		if _, optional := roleOptionalFields[k]; !optional && v == "" {
 			return "", nil, errors.New(i18n.T("err.role.emptyField", "Role", name, "Field", k))
 		}
-		if k == "country" && len(v) != 2 {
+		if k == "country" && !(len(v) == 2 && ((v[0] >= 'A' && v[0] <= 'Z') || (v[0] >= 'a' && v[0] <= 'z')) &&
+			((v[1] >= 'A' && v[1] <= 'Z') || (v[1] >= 'a' && v[1] <= 'z'))) {
 			return "", nil, errors.New(i18n.T("err.role.country", "Role", name, "Field", k, "Value", v))
 		}
 		fields[k] = v

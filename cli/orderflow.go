@@ -276,7 +276,15 @@ func resolveRegistrant(cmd *cobra.Command, app *App, ownContact bool, contactLab
 		}
 		for _, s := range sets.ContactSets {
 			if s.IsDefault {
-				return nil, s.Roles, "", false, nil
+				// Roles ride on this exact set: pin its ID so the server
+				// resolves the registrant from the SAME snapshot — a
+				// default-set change between now and order creation cannot
+				// pair the old roles with a new registrant. Without roles
+				// the legacy empty-ID payload stays unchanged.
+				if s.Roles != nil {
+					return nil, s.Roles, s.ID, false, nil
+				}
+				return nil, nil, "", false, nil
 			}
 		}
 		// Contacts are mandatory for registration and transfer; with no
