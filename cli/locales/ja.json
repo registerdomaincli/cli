@@ -239,5 +239,11 @@
   "contacts.roleFrom": "ロール {{.Role}}:  {{.Who}}",
   "contacts.roleInherit": "登録者と同じ",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= は空にできません：{{.Field}} は必須の WHOIS 項目です",
-  "err.role.country": "--role {{.Role}} の国の上書き「{{.Value}}」は ISO 3166-1 alpha-2（2 文字）である必要があります"
+  "err.role.country": "--role {{.Role}} の国の上書き「{{.Value}}」は ISO 3166-1 alpha-2（2 文字）である必要があります",
+  "domains.contacts.short": "所有ドメインの WHOIS 連絡先を表示・更新",
+  "domains.contacts.long": "所有ドメインのレジストラ側の連絡先を表示または置き換えます。\n\n既定では各ロールは登録者自身です。レジストリが管理・技術・請求について別の\n担当者に連絡する必要がある場合のみ設定してください。登録者の変更は ICANN メール\n認証やレジストラの転送ロックを引き起こすことがあります。\n\n  domain-cli domains contacts acme.com                     # 表示\n  domain-cli domains contacts acme.com --contact work      # 保存済みセットを適用\n  domain-cli domains contacts acme.com --role-tech auto    # tech = 登録者",
+  "domains.contacts.hdrRegistrant": "登録者:",
+  "domains.contacts.allInherit": "ロール:      すべて登録者と同じ",
+  "domains.contacts.dryRunHdr": "{{.Domain}} の連絡先を更新します:",
+  "domains.contacts.dryRunFoot": "ドライラン: 何も変更されていません。--yes で適用します。"
 }

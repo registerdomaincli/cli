@@ -239,5 +239,11 @@
   "contacts.roleFrom": "роль {{.Role}}:  {{.Who}}",
   "contacts.roleInherit": "как у регистранта",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= не может быть пустым: {{.Field}} — обязательное поле WHOIS",
-  "err.role.country": "подстановка страны в --role {{.Role}} «{{.Value}}» должна быть ISO 3166-1 alpha-2 (2 буквы)"
+  "err.role.country": "подстановка страны в --role {{.Role}} «{{.Value}}» должна быть ISO 3166-1 alpha-2 (2 буквы)",
+  "domains.contacts.short": "Показать или обновить WHOIS-контакты вашего домена",
+  "domains.contacts.long": "Показывает текущие контакты домена у регистратора или заменяет их.\n\nПо умолчанию каждая роль — регистрант; задавайте admin/tech/billing явно, только\nесли реестр должен связываться с другим лицом. Смена регистранта может запустить\nпроверку ICANN и блокировку transfers у регистратора.\n\n  domain-cli domains contacts acme.com                     # показать\n  domain-cli domains contacts acme.com --contact work      # применить набор\n  domain-cli domains contacts acme.com --role-tech auto    # tech = регистрант",
+  "domains.contacts.hdrRegistrant": "регистрант:",
+  "domains.contacts.allInherit": "роли:        все как у регистранта",
+  "domains.contacts.dryRunHdr": "Будут обновлены контакты {{.Domain}}:",
+  "domains.contacts.dryRunFoot": "Dry run: ничего не изменено. Передайте --yes для применения."
 }

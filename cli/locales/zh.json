@@ -239,5 +239,11 @@
   "contacts.roleFrom": "角色 {{.Role}}：{{.Who}}",
   "contacts.roleInherit": "与注册人相同",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= 不能为空：{{.Field}} 是必填的 WHOIS 字段",
-  "err.role.country": "--role {{.Role}} 的国家覆盖值“{{.Value}}”必须是 ISO 3166-1 alpha-2（2 个字母）"
+  "err.role.country": "--role {{.Role}} 的国家覆盖值“{{.Value}}”必须是 ISO 3166-1 alpha-2（2 个字母）",
+  "domains.contacts.short": "查看或更新你拥有的域名的 WHOIS 联系人",
+  "domains.contacts.long": "查看名下域名的注册局实时联系人，或进行替换。\n\n默认情况下每个角色都是注册人；仅当注册局需要联系其他人处理管理、技术或账务\n事宜时才需显式设置。更改注册人可能触发 ICANN 邮箱验证及注册局转移锁。\n\n  domain-cli domains contacts acme.com                     # 查看\n  domain-cli domains contacts acme.com --contact work      # 应用已保存的联系人集\n  domain-cli domains contacts acme.com --role-tech auto    # tech = 注册人",
+  "domains.contacts.hdrRegistrant": "注册人：",
+  "domains.contacts.allInherit": "角色：      全部与注册人相同",
+  "domains.contacts.dryRunHdr": "将更新 {{.Domain}} 的联系人：",
+  "domains.contacts.dryRunFoot": "Dry run：未做任何更改。传入 --yes 以应用。"
 }

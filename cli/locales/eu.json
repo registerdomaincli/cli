@@ -239,5 +239,11 @@
   "contacts.roleFrom": "rola {{.Role}}:  {{.Who}}",
   "contacts.roleInherit": "erregistratzailea bezala",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= ezin da hutsik egon: {{.Field}} WHOIS derrigorrezko eremua da",
-  "err.role.country": "--role {{.Role}} herrialdearen gainidazpena \"{{.Value}}\" ISO 3166-1 alpha-2 izan behar du (2 letrak)"
+  "err.role.country": "--role {{.Role}} herrialdearen gainidazpena \"{{.Value}}\" ISO 3166-1 alpha-2 izan behar du (2 letrak)",
+  "domains.contacts.short": "Erakutsi edo eguneratu zeure domeinuaren WHOIS kontaktuak",
+  "domains.contacts.long": "Zeure domeinuaren erregistratzailearen kontaktuak erakusten ditu, edo ordezten.\n\nLehenespenez rol bakoitza erregistratzailea da; admin/tech/billing esplizituki\nbakarrik ezarri erregistroak beste pertsona bati deitu behar dionean. Erregistratzailea\naldatzeak ICANN egiaztapena eta erregistratzailearen transferentzia-blokeoa piz ditzake.\n\n  domain-cli domains contacts acme.com                     # erakutsi\n  domain-cli domains contacts acme.com --contact work      # gordetako multzoa ezarri\n  domain-cli domains contacts acme.com --role-tech auto    # tech = erregistratzailea",
+  "domains.contacts.hdrRegistrant": "erregistratzailea:",
+  "domains.contacts.allInherit": "rolak:       denak erregistratzailea bezala",
+  "domains.contacts.dryRunHdr": "{{.Domain}} kontaktuak eguneratuko lituzke:",
+  "domains.contacts.dryRunFoot": "Dry run: ez da ezer aldatu. Pasatu --yes ezartzeko."
 }

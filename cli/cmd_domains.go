@@ -80,6 +80,7 @@ func newDomainsCmd(app *App) *cobra.Command {
 	cmd.AddCommand(newLockCmd(app, true))
 	cmd.AddCommand(newLockCmd(app, false))
 	cmd.AddCommand(newAutorenewCmd(app))
+	cmd.AddCommand(newDomainContactsCmd(app))
 	return cmd
 }
 

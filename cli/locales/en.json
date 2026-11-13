@@ -239,5 +239,11 @@
   "contacts.roleFrom": "role {{.Role}}:  {{.Who}}",
   "contacts.roleInherit": "same as registrant",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= cannot be empty: {{.Field}} is a required WHOIS field",
-  "err.role.country": "--role {{.Role}} country override \"{{.Value}}\" must be ISO 3166-1 alpha-2 (2 letters)"
+  "err.role.country": "--role {{.Role}} country override \"{{.Value}}\" must be ISO 3166-1 alpha-2 (2 letters)",
+  "domains.contacts.short": "Show or update the WHOIS contacts of a domain you own",
+  "domains.contacts.long": "Shows the live registrar-of-record contacts of an owned domain, or replaces them.\n\nBy default every role is the registrant; define admin/tech/billing explicitly\nonly when the registry must reach a different person. A registrant change may\ntrigger ICANN email verification and a registrar transfer lock.\n\n  domain-cli domains contacts acme.com                     # show\n  domain-cli domains contacts acme.com --contact work      # apply a saved set\n  domain-cli domains contacts acme.com --role-tech auto    # reset tech to registrant",
+  "domains.contacts.hdrRegistrant": "registrant:",
+  "domains.contacts.allInherit": "roles:      all same as registrant",
+  "domains.contacts.dryRunHdr": "Would update the contacts of {{.Domain}}:",
+  "domains.contacts.dryRunFoot": "Dry run: nothing was changed. Pass --yes to apply."
 }

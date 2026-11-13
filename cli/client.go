@@ -297,6 +297,23 @@ func (c *Client) SetNameservers(domain string, ns []string) error {
 		apitypes.NameserversInput{Nameservers: ns}, nil)
 }
 
+// DomainContacts reads the live registrar-of-record contacts of a domain.
+// Roles identical to the registrant report nil.
+func (c *Client) DomainContacts(domain string) (apitypes.DomainContactsResponse, error) {
+	var out apitypes.DomainContactsResponse
+	err := c.do(http.MethodGet, "/v1/domains/"+domain+"/contacts", nil, &out)
+	return out, err
+}
+
+// SetDomainContacts replaces the registrar-of-record contacts. Roles follow
+// the order-placing semantics (nil = inherit the registrant); the server
+// fills all four slots upstream and may surface ICANN/transfer-lock errors.
+func (c *Client) SetDomainContacts(domain string, in apitypes.UpdateDomainContactsInput) (apitypes.DomainContactsResponse, error) {
+	var out apitypes.DomainContactsResponse
+	err := c.do(http.MethodPut, "/v1/domains/"+domain+"/contacts", in, &out)
+	return out, err
+}
+
 // ContactSets lists the saved registrant contact sets.
 func (c *Client) ContactSets() (apitypes.ContactSetsResponse, error) {
 	var out apitypes.ContactSetsResponse

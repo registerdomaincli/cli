@@ -239,5 +239,11 @@
   "contacts.roleFrom": "rol {{.Role}}:  {{.Who}}",
   "contacts.roleInherit": "igual que el registrant",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= no pot ser buit: {{.Field}} és un camp WHOIS obligatori",
-  "err.role.country": "l'override de país de --role {{.Role}} \"{{.Value}}\" ha de ser ISO 3166-1 alfa-2 (2 lletres)"
+  "err.role.country": "l'override de país de --role {{.Role}} \"{{.Value}}\" ha de ser ISO 3166-1 alfa-2 (2 lletres)",
+  "domains.contacts.short": "Mostra o actualitza els contactes WHOIS d'un domini teu",
+  "domains.contacts.long": "Mostra els contactes vius del registrador d'un domini propi, o els substitueix.\n\nPer defecte cada rol és el registrant; defineix admin/tech/billing explícitament\nnomés si el registre ha de contactar una persona diferent. Un canvi de registrant\npot activar la verificació ICANN i un bloqueig de transferència del registrador.\n\n  domain-cli domains contacts acme.com                     # mostra\n  domain-cli domains contacts acme.com --contact work      # aplica un set desat\n  domain-cli domains contacts acme.com --role-tech auto    # tech = registrant",
+  "domains.contacts.hdrRegistrant": "registrant:",
+  "domains.contacts.allInherit": "rols:       tots iguals al registrant",
+  "domains.contacts.dryRunHdr": "Actualitzaria els contactes de {{.Domain}}:",
+  "domains.contacts.dryRunFoot": "Dry run: no s'ha canviat res. Passa --yes per aplicar."
 }
