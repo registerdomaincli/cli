@@ -304,14 +304,16 @@ func (c *Client) ContactSets() (apitypes.ContactSetsResponse, error) {
 	return out, err
 }
 
-// CreateContactSet saves a registrant under a label.
-func (c *Client) CreateContactSet(label string, reg apitypes.Registrant) (apitypes.ContactSet, error) {
+// CreateContactSet saves a registrant under a label. roles may be nil —
+// the set then carries no per-role contacts (all roles = registrant).
+func (c *Client) CreateContactSet(label string, reg apitypes.Registrant, roles *apitypes.RoleContacts) (apitypes.ContactSet, error) {
 	var out apitypes.ContactSet
 	err := c.do(http.MethodPost, "/v1/contact-sets",
 		struct {
-			Label      string              `json:"label"`
-			Registrant apitypes.Registrant `json:"registrant"`
-		}{Label: label, Registrant: reg}, &out)
+			Label      string                 `json:"label"`
+			Registrant apitypes.Registrant    `json:"registrant"`
+			Roles      *apitypes.RoleContacts `json:"roles,omitempty"`
+		}{Label: label, Registrant: reg, Roles: roles}, &out)
 	return out, err
 }
 

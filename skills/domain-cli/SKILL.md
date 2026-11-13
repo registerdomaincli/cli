@@ -66,6 +66,14 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   or the full flag set (`--first-name --last-name --email --phone --address1
   --city --zip --country`, optional `--organization --address2 --state`);
   `--save-contact <label>` persists them for reuse.
+- **Per-role WHOIS contacts** (registration/transfer): registries carry
+  admin, tech and billing contacts besides the registrant. By default all
+  three are the registrant (what almost everyone wants; privacy services
+  hide them anyway). To differentiate a role, pass `--role-<name>
+  field=value,...` (`admin`, `tech`, `billing`; fields are the registrant
+  flags) or `--role <name>=<spec>`; `auto`/`registrant` pin the default
+  explicitly. Field specs derive from the INLINE registrant only — with a
+  contact set they are rejected.
 - **Billing profile & VAT** (before the first order for a new account): run
   `domain-cli billing show`. When it prints "No billing profile saved", the
   server bills from the domain's registrant contact and charges the default
@@ -158,12 +166,12 @@ production).
 |---|---|
 | `domain-cli search <query> [--tlds com,net,...] [--limit N]` | Keyword search, or FQDN check when the query contains a dot. `--tlds` restricts the result to those TLDs (≤50, run `tlds` to see the catalog); `--limit` caps rows (default and ceiling 50). Prices are indicative; exact charge appears at `register`/`renew`/`transfer` confirm time. |
 | `domain-cli tlds [--group <slug>]` | List every sellable TLD with its curated intent groups (`local`, `business`, `tech`, `shop`, `creative`, `org`). `--group` filters the list. Use it to translate "domains in the user's region" into an exact `--tlds` set. |
-| `domain-cli register <domain...> [--years N] [--own-contact \| --contact <label>] [--new-payment-method] [--dry-run]` | Quote → confirm → order → checkout in the human's browser → polls until paid/failed. With a saved payment method and no `--new-payment-method` the order is charged instantly (empty `checkoutUrl`, no browser). With SEVERAL domains they go into ONE order (one payment, one invoice with a line per domain). Prompts for registrant when no default contact set exists; offers to save it. |
+| `domain-cli register <domain...> [--years N] [--own-contact \| --contact <label>] [--role-admin|--role-tech|--role-billing <spec>] [--new-payment-method] [--dry-run]` | Quote → confirm → order → checkout in the human's browser → polls until paid/failed. With a saved payment method and no `--new-payment-method` the order is charged instantly (empty `checkoutUrl`, no browser). With SEVERAL domains they go into ONE order (one payment, one invoice with a line per domain). Prompts for registrant when no default contact set exists; offers to save it. |
 | `domain-cli renew <domain> [--years N] [--new-payment-method]` | Same flow with `kind=renewal`. |
 | `domain-cli transfer <domain> --auth-code <code> [--contact <label>] [--own-contact] [--new-payment-method]` | Same flow with `kind=transfer`. Transfers take up to 7 days; watch `domain-cli orders`. |
 | `domain-cli orders [--cancel <id>]` | List orders (status, invoice number, checkout URL) or cancel an open order. |
 | `domain-cli invoice <orderId>` | Opens the order's pre-signed invoice URL in the browser and prints it. |
-| `domain-cli contacts add <label> \| list \| show <label> \| default <label> \| remove <label>` | Manage saved registrant contact sets. |
+| `domain-cli contacts add <label> \| list \| show <label> \| default <label> \| remove <label>` | Manage saved registrant contact sets. `add` accepts the same `--role-*` flags; `show` prints the per-role summary. |
 | `domain-cli payment-methods` | List the saved payment methods that power the no-browser fast checkout. Check this before the first order of a session and ask the human which rail to pay on; `--new-payment-method` on the order forces the hosted checkout instead. |
 | `domain-cli legal [notice\|privacy\|terms\|cookies]` | Open a legal document (default `notice`). |
 | `domain-cli domains` | List owned domains (expiry, autorenew, privacy, lock). |

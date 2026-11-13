@@ -25,17 +25,23 @@ func newContactsCmd(app *App) *cobra.Command {
 
 func newContactsAddCmd(app *App) *cobra.Command {
 	var rf registrantFlags
+	var rolf roleFlags
 	cmd := &cobra.Command{
 		Use:   "add <label>",
 		Short: i18n.T("contacts.add.short"),
 		Long:  i18n.T("contacts.add.long"),
 		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Flag syntax fails fast, before any network call.
+			if err := rolf.collect(cmd); err != nil {
+				return err
+			}
 			c, err := app.requireClient()
 			if err != nil {
 				return err
 			}
 			var reg apitypes.Registrant
+			var prompted bool
 			switch {
 			case rf.any():
 				built, err := rf.build()
@@ -49,20 +55,24 @@ func newContactsAddCmd(app *App) *cobra.Command {
 					email = me.Email
 				}
 				reg = app.p.registrant(email)
+				prompted = true
 			default:
 				return missingFlags("--first-name", "--last-name", "--email", "--phone",
 					"--address1", "--city", "--zip", "--country")
 			}
-			cs, err := c.CreateContactSet(args[0], reg)
+			roles, err := resolveRoles(cmd, app, &rolf, &reg, prompted, nil)
 			if err != nil {
 				return fail(err)
 			}
-			_ = cs
+			if _, err := c.CreateContactSet(args[0], reg, roles); err != nil {
+				return fail(err)
+			}
 			fmt.Fprintln(cmd.OutOrStdout(), i18n.T("contacts.saved", "Label", args[0]))
 			return nil
 		},
 	}
 	addRegistrantFlags(cmd, &rf)
+	addRoleFlags(cmd, &rolf)
 	return cmd
 }
 
@@ -140,6 +150,21 @@ func newContactsShowCmd(app *App) *cobra.Command {
 			fmt.Fprintf(out, "state:       %s\n", r.State)
 			fmt.Fprintf(out, "zip:         %s\n", r.Zip)
 			fmt.Fprintf(out, "country:     %s\n", r.Country)
+			if s.Roles != nil {
+				for _, name := range roleNames {
+					c := map[string]*apitypes.Registrant{
+						"admin":   s.Roles.Admin,
+						"tech":    s.Roles.Tech,
+						"billing": s.Roles.Billing,
+					}[name]
+					if c == nil {
+						fmt.Fprintln(out, i18n.T("contacts.roleFrom", "Role", name, "Who", i18n.T("contacts.roleInherit")))
+						continue
+					}
+					fmt.Fprintln(out, i18n.T("contacts.roleFrom", "Role", name,
+						"Who", c.FirstName+" "+c.LastName+" <"+c.Email+">"))
+				}
+			}
 			return nil
 		},
 	}
