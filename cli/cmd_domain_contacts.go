@@ -92,44 +92,58 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 					return rerr
 				}
 			default:
-				// No saved set (or no default) on an interactive run: ask
-				// for the registrant inline instead of a bare missing-flags
-				// error — the update needs SOME registrant to proceed.
+				// One /v1/contact-sets fetch for the whole default branch: the
+				// same response drives the default detection, the explicit
+				// label resolution, and the prompt decision. A second request
+				// would risk a rate-limit failure of an otherwise resolvable
+				// update.
 				sets, gerr := c.ContactSets()
 				if gerr != nil {
 					return fail(gerr)
 				}
-				hasDefault := false
-				for i := range sets.ContactSets {
-					if sets.ContactSets[i].IsDefault {
-						hasDefault = true
+				var cs *apitypes.ContactSet
+				if contact != "" {
+					for i := range sets.ContactSets {
+						if sets.ContactSets[i].Label == contact {
+							cs = &sets.ContactSets[i]
+							break
+						}
+					}
+					if cs == nil {
+						return errors.New(i18n.T("contacts.notFound", "Label", contact))
+					}
+				} else {
+					for i := range sets.ContactSets {
+						if sets.ContactSets[i].IsDefault {
+							cs = &sets.ContactSets[i]
+							break
+						}
 					}
 				}
-				// Prompt only when NO explicit label was supplied: an
-				// explicit --contact must resolve (or fail not-found),
-				// never be silently replaced by fresh prompts.
-				if !hasDefault && contact == "" && app.p.stdinIsTTY() {
-					email := ""
-					if me, merr := c.Me(); merr == nil {
-						email = me.Email
+				if cs == nil {
+					// No explicit label, no default: prompt on a TTY (the update
+					// needs SOME registrant), otherwise name the flags.
+					if app.p.stdinIsTTY() {
+						email := ""
+						if me, merr := c.Me(); merr == nil {
+							email = me.Email
+						}
+						built := app.p.registrant(email)
+						reg, prompted = &built, true
+						var rerr error
+						roles, rerr = resolveRoles(cmd, app, &rolf, reg, prompted, nil)
+						if rerr != nil {
+							return rerr
+						}
+						break
 					}
-					built := app.p.registrant(email)
-					reg, prompted = &built, true
-					var rerr error
-					roles, rerr = resolveRoles(cmd, app, &rolf, reg, prompted, nil)
-					if rerr != nil {
-						return rerr
-					}
-					break
-				}
-				cs, cserr := resolveContactSetForUpdate(cmd, app, contact)
-				if cserr != nil {
-					return cserr
+					return missingFlags("--contact", "--first-name", "--last-name",
+						"--email", "--phone", "--address1", "--city", "--zip", "--country")
 				}
 				reg = &cs.Registrant
-				// nil derivation base: field specs are refused on the set
-				// path; saved roles inherit unless an explicit auto/
-				// registrant spec replaces the whole bundle.
+				// nil derivation base: field specs are refused on the set path;
+				// saved roles inherit unless an explicit auto/registrant spec
+				// replaces the whole bundle.
 				var rerr error
 				roles, rerr = resolveRoles(cmd, app, &rolf, nil, false, cs.Roles)
 				if rerr != nil {
@@ -196,40 +210,6 @@ func isShow(cmd *cobra.Command, rf *registrantFlags, rolf *roleFlags, contact st
 		_ = rolf.collect(cmd)
 	}
 	return len(rolf.parsed) == 0
-}
-
-// resolveContactSetForUpdate fetches ONE saved set (by label, or the
-// account default) and returns it whole: the PUT takes both the registrant
-// and the roles from this single snapshot, so a set edit or default change
-// between requests can never mix snapshots. Non-interactive without a
-// label and no default fails naming the flags — never a silent pick.
-func resolveContactSetForUpdate(cmd *cobra.Command, app *App, label string) (*apitypes.ContactSet, error) {
-	c, err := app.requireClient()
-	if err != nil {
-		return nil, err
-	}
-	sets, err := c.ContactSets()
-	if err != nil {
-		return nil, fail(err)
-	}
-	if label != "" {
-		for i := range sets.ContactSets {
-			if sets.ContactSets[i].Label == label {
-				return &sets.ContactSets[i], nil
-			}
-		}
-		return nil, errors.New(i18n.T("contacts.notFound", "Label", label))
-	}
-	for i := range sets.ContactSets {
-		if sets.ContactSets[i].IsDefault {
-			return &sets.ContactSets[i], nil
-		}
-	}
-	if !app.p.stdinIsTTY() {
-		return nil, missingFlags("--contact", "--first-name", "--last-name",
-			"--email", "--phone", "--address1", "--city", "--zip", "--country")
-	}
-	return nil, missingFlags("--contact")
 }
 
 // printRoleSummary renders the per-role lines of a plan/confirmation.
