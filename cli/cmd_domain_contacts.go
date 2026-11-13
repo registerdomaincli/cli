@@ -23,7 +23,8 @@ import (
 // a registrar transfer lock — the command warns before confirming when the
 // registrant fields change.
 func newDomainContactsCmd(app *App) *cobra.Command {
-	var contact, ownContact string
+	var contact string
+	var ownContact bool
 	var rf registrantFlags
 	var rolf roleFlags
 	var dryRun bool
@@ -47,7 +48,7 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 			}
 
 			// --show / default: read-only view of the live contacts.
-			if isShow(cmd, &rf, &rolf, contact) {
+			if isShow(cmd, &rf, &rolf, contact, ownContact) {
 				return showDomainContacts(cmd, c, domain)
 			}
 
@@ -59,26 +60,48 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 			var reg *apitypes.Registrant
 			var roles *apitypes.RoleContacts
 			var prompted bool
-			if rf.any() {
+			switch {
+			case ownContact:
+				// Interactive registrant entry; needs a human on a TTY.
+				if !app.p.stdinIsTTY() {
+					return missingFlags("--first-name", "--last-name",
+						"--email", "--phone", "--address1", "--city", "--zip", "--country")
+				}
+				email := ""
+				if me, merr := c.Me(); merr == nil {
+					email = me.Email
+				}
+				built := app.p.registrant(email)
+				reg, prompted = &built, true
+				var rerr error
+				roles, rerr = resolveRoles(cmd, app, &rolf, reg, prompted, nil)
+				if rerr != nil {
+					return rerr
+				}
+			case rf.any():
 				built, berr := rf.build()
 				if berr != nil {
 					return berr
 				}
-				reg, prompted = built, false
-				roles, err = resolveRoles(cmd, app, &rolf, reg, prompted, nil)
-				if err != nil {
-					return err
+				reg = built
+				var rerr error
+				roles, rerr = resolveRoles(cmd, app, &rolf, reg, false, nil)
+				if rerr != nil {
+					return rerr
 				}
-			} else {
+			default:
 				cs, cserr := resolveContactSetForUpdate(cmd, app, contact)
 				if cserr != nil {
 					return cserr
 				}
-				prompted = false
 				reg = &cs.Registrant
-				roles, err = resolveRoles(cmd, app, &rolf, reg, prompted, cs.Roles)
-				if err != nil {
-					return err
+				// nil derivation base: field specs are refused on the set
+				// path; saved roles inherit unless an explicit auto/
+				// registrant spec replaces the whole bundle.
+				var rerr error
+				roles, rerr = resolveRoles(cmd, app, &rolf, nil, false, cs.Roles)
+				if rerr != nil {
+					return rerr
 				}
 			}
 
@@ -89,10 +112,14 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 			// Human-approval gate with a visible summary: contacts changes
 			// can trigger ICANN verification and a registrar transfer lock
 			// when the registrant changes — the human must see WHAT is
-			// about to be applied, not just a bare y/N.
-			fmt.Fprint(cmd.OutOrStdout(), i18n.T("domains.contacts.confirmHdr", "Domain", domain))
-			printContactFields(cmd, *reg)
-			printRoleSummary(cmd, roles)
+			// about to be applied, not just a bare y/N. In --json mode the
+			// summary stays off stdout so the output stays parseable; the
+			// approval gate still applies (--yes).
+			if !jsonFlag {
+				fmt.Fprint(cmd.OutOrStdout(), i18n.T("domains.contacts.confirmHdr", "Domain", domain))
+				printContactFields(cmd, *reg)
+				printRoleSummary(cmd, roles)
+			}
 			confirmed, err := requireYes(cmd, app)
 			if err != nil {
 				return err
@@ -121,18 +148,16 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 	}
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would change and stop")
 	cmd.Flags().StringVar(&contact, "contact", "", "apply the saved contact set with this label")
-	cmd.Flags().StringVar(&ownContact, "own-contact", "", "unused placeholder to reserve the flag namespace")
-	_ = ownContact
-	cmd.Flags().MarkHidden("own-contact")
+	cmd.Flags().BoolVar(&ownContact, "own-contact", false, "enter the registrant contact inline")
 	addRegistrantFlags(cmd, &rf)
 	addRoleFlags(cmd, &rolf)
 	return cmd
 }
 
 // isShow reports whether the invocation is a plain read: no registrant
-// flags, no role flags, no --contact.
-func isShow(cmd *cobra.Command, rf *registrantFlags, rolf *roleFlags, contact string) bool {
-	if contact != "" || rf.any() {
+// flags, no role flags, no --contact, no --own-contact.
+func isShow(cmd *cobra.Command, rf *registrantFlags, rolf *roleFlags, contact string, ownContact bool) bool {
+	if contact != "" || rf.any() || ownContact {
 		return false
 	}
 	if len(rolf.parsed) == 0 {
