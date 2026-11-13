@@ -239,5 +239,18 @@
   "contacts.roleFrom": "الدور {{.Role}}:  {{.Who}}",
   "contacts.roleInherit": "نفس المسجَّل",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= لا يمكن أن يكون فارغًا: {{.Field}} حقل WHOIS مطلوب",
-  "err.role.country": "تجاوز بلد --role {{.Role}} \"{{.Value}}\" يجب أن يكون ISO 3166-1 alpha-2 (حرفان)"
+  "err.role.country": "تجاوز بلد --role {{.Role}} \"{{.Value}}\" يجب أن يكون ISO 3166-1 alpha-2 (حرفان)",
+  "domains.contacts.short": "اعرض أو حدّث جهات اتصال WHOIS لنطاق تملكه",
+  "domains.contacts.long": "يعرض جهات الاتصال الحالية لدى المسجِّل لنطاق تملكه، أو يستبدلها.\n\nافتراضيًا كل دور هو المسجَّل نفسه؛ عيّن admin/tech/billing صراحةً فقط إذا احتاج\nالسجل إلى الاتصال بشخص آخر. تغيير المسجَّل قد يفعّل تحقق ICANN وقفل نقل لدى المسجِّل.\n\n  domain-cli domains contacts acme.com                     # عرض\n  domain-cli domains contacts acme.com --contact work      # تطبيق مجموعة محفوظة\n  domain-cli domains contacts acme.com --role-tech auto    # tech = المسجَّل",
+  "domains.contacts.hdrRegistrant": "المسجَّل:",
+  "domains.contacts.allInherit": "الأدوار:      كلها نفس المسجَّل",
+  "domains.contacts.dryRunHdr": "سيُحدِّث جهات اتصال {{.Domain}}:",
+  "domains.contacts.dryRunFoot": "تشغيل جاف: لم يُغيَّر شيء. مرّر --yes للتطبيق.",
+  "domains.contacts.confirmHdr": "تحديث جهات اتصال WHOIS للنطاق {{.Domain}}؟ جهات الاتصال الجديدة:",
+  "domains.contacts.fldName": "الاسم:",
+  "domains.contacts.fldOrg": "المنظمة:",
+  "domains.contacts.fldEmail": "البريد:",
+  "domains.contacts.fldPhone": "الهاتف:",
+  "domains.contacts.fldAddress": "العنوان:",
+  "domains.contacts.fldState": "الولاية:"
 }

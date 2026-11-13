@@ -239,5 +239,18 @@
   "contacts.roleFrom": "rôle {{.Role}} :  {{.Who}}",
   "contacts.roleInherit": "identique au titulaire",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= ne peut pas être vide : {{.Field}} est un champ WHOIS obligatoire",
-  "err.role.country": "la substitution de pays de --role {{.Role}} « {{.Value}} » doit être ISO 3166-1 alpha-2 (2 lettres)"
+  "err.role.country": "la substitution de pays de --role {{.Role}} « {{.Value}} » doit être ISO 3166-1 alpha-2 (2 lettres)",
+  "domains.contacts.short": "Affiche ou met à jour les contacts WHOIS d'un domaine vous appartenant",
+  "domains.contacts.long": "Affiche les contacts vivants du registrar d'un domaine détenu, ou les remplace.\n\nPar défaut chaque rôle est le titulaire ; définissez admin/tech/billing\nexplicitement seulement si le registre doit joindre une personne différente. Un\nchangement de titulaire peut déclencher la vérification ICANN et un verrou de\ntransfert du registrar.\n\n  domain-cli domains contacts acme.com                     # affiche\n  domain-cli domains contacts acme.com --contact work      # applique un set\n  domain-cli domains contacts acme.com --role-tech auto    # tech = titulaire",
+  "domains.contacts.hdrRegistrant": "titulaire :",
+  "domains.contacts.allInherit": "rôles :      tous identiques au titulaire",
+  "domains.contacts.dryRunHdr": "Mettrait à jour les contacts de {{.Domain}} :",
+  "domains.contacts.dryRunFoot": "Dry run : rien n'a été modifié. Passez --yes pour appliquer.",
+  "domains.contacts.confirmHdr": "Mettre à jour les contacts WHOIS de {{.Domain}} ? Nouveaux contacts :",
+  "domains.contacts.fldName": "nom :",
+  "domains.contacts.fldOrg": "org :",
+  "domains.contacts.fldEmail": "e-mail :",
+  "domains.contacts.fldPhone": "téléphone :",
+  "domains.contacts.fldAddress": "adresse :",
+  "domains.contacts.fldState": "province :"
 }

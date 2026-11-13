@@ -330,6 +330,24 @@ type AuthCodeResponse struct {
 	AuthCode string `json:"authCode"`
 }
 
+// DomainContactsResponse is GET /v1/domains/{name}/contacts: the live
+// registrar-of-record contacts. Roles identical to the registrant report
+// nil — the product-wide "same as registrant" inheritance.
+type DomainContactsResponse struct {
+	Registrant   Registrant    `json:"registrant"`
+	RoleContacts *RoleContacts `json:"roleContacts,omitempty"`
+}
+
+// UpdateDomainContactsInput is the PUT /v1/domains/{name}/contacts body.
+// Registrant is required; roles follow the order-placing semantics (nil
+// role = inherit the registrant; the server always fills all four slots
+// upstream). A registrant change may trigger ICANN verification and a
+// registrar transfer lock — the server surfaces those as normal errors.
+type UpdateDomainContactsInput struct {
+	Registrant   Registrant    `json:"registrant"`
+	RoleContacts *RoleContacts `json:"roleContacts,omitempty"`
+}
+
 // Record is one DNS record. ID is the registrar's numeric id (delete and
 // update take it). An empty Host is the zone apex.
 type Record struct {

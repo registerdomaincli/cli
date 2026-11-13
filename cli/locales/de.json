@@ -239,5 +239,18 @@
   "contacts.roleFrom": "Rolle {{.Role}}:  {{.Who}}",
   "contacts.roleInherit": "wie der Registrant",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= darf nicht leer sein: {{.Field}} ist ein Pflicht-WHOIS-Feld",
-  "err.role.country": "die Länder-Überschreibung von --role {{.Role}} \"{{.Value}}\" muss ISO 3166-1 alpha-2 sein (2 Buchstaben)"
+  "err.role.country": "die Länder-Überschreibung von --role {{.Role}} \"{{.Value}}\" muss ISO 3166-1 alpha-2 sein (2 Buchstaben)",
+  "domains.contacts.short": "Zeigt oder aktualisiert die WHOIS-Kontakte einer eigenen Domain",
+  "domains.contacts.long": "Zeigt die live-Registrar-Kontakte einer eigenen Domain oder ersetzt sie.\n\nStandardmäßig ist jede Rolle der Registrant; definieren Sie admin/tech/billing\nnur dann explizit, wenn die Registrierungsstelle eine andere Person kontaktieren\nmuss. Ein Registrantenwechsel kann ICANN-Verifizierung und eine Transfer-Sperre\ndes Registrars auslösen.\n\n  domain-cli domains contacts acme.com                     # anzeigen\n  domain-cli domains contacts acme.com --contact work      # gespeichertes Set\n  domain-cli domains contacts acme.com --role-tech auto    # tech = Registrant",
+  "domains.contacts.hdrRegistrant": "registrant:",
+  "domains.contacts.allInherit": "rollen:      alle wie der Registrant",
+  "domains.contacts.dryRunHdr": "Würde die Kontakte von {{.Domain}} aktualisieren:",
+  "domains.contacts.dryRunFoot": "Dry run: nichts wurde geändert. Mit --yes anwenden.",
+  "domains.contacts.confirmHdr": "WHOIS-Kontakte von {{.Domain}} aktualisieren? Neue Kontakte:",
+  "domains.contacts.fldName": "name:",
+  "domains.contacts.fldOrg": "org:",
+  "domains.contacts.fldEmail": "e-mail:",
+  "domains.contacts.fldPhone": "telefon:",
+  "domains.contacts.fldAddress": "adresse:",
+  "domains.contacts.fldState": "bundesland:"
 }

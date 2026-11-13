@@ -239,5 +239,18 @@
   "contacts.roleFrom": "भूमिका {{.Role}}:  {{.Who}}",
   "contacts.roleInherit": "रजिस्ट्रेंट जैसा ही",
   "err.role.emptyField": "--role {{.Role}}={{.Field}}= खाली नहीं हो सकता: {{.Field}} एक आवश्यक WHOIS फ़ील्ड है",
-  "err.role.country": "--role {{.Role}} का देश ओवरराइड \"{{.Value}}\" ISO 3166-1 alpha-2 (2 अक्षर) होना चाहिए"
+  "err.role.country": "--role {{.Role}} का देश ओवरराइड \"{{.Value}}\" ISO 3166-1 alpha-2 (2 अक्षर) होना चाहिए",
+  "domains.contacts.short": "अपने डोमेन के WHOIS संपर्क देखें या अपडेट करें",
+  "domains.contacts.long": "अपने डोमेन के रजिस्ट्रार के लाइव संपर्क देखें या बदलें।\n\nडिफ़ॉल्ट रूप से हर भूमिका रजिस्ट्रेंट ही होती है; तभी admin/tech/billing सेट करें\nजब रजिस्ट्री को किसी अन्य व्यक्ति से संपर्क करना हो। रजिस्ट्रेंट बदलने पर ICANN\nसत्यापन और रजिस्ट्रार ट्रांसफ़र लॉक सक्रिय हो सकता है।\n\n  domain-cli domains contacts acme.com                     # देखें\n  domain-cli domains contacts acme.com --contact work      # सहेजा सेट लगाएँ\n  domain-cli domains contacts acme.com --role-tech auto    # tech = रजिस्ट्रेंट",
+  "domains.contacts.hdrRegistrant": "रजिस्ट्रेंट:",
+  "domains.contacts.allInherit": "भूमिकाएँ:      सभी रजिस्ट्रेंट जैसी",
+  "domains.contacts.dryRunHdr": "{{.Domain}} के संपर्क अपडेट होंगे:",
+  "domains.contacts.dryRunFoot": "Dry run: कुछ नहीं बदला। लागू करने के लिए --yes दें।",
+  "domains.contacts.confirmHdr": "{{.Domain}} के WHOIS संपर्क अपडेट करें? नए संपर्क:",
+  "domains.contacts.fldName": "नाम:",
+  "domains.contacts.fldOrg": "संगठन:",
+  "domains.contacts.fldEmail": "ईमेल:",
+  "domains.contacts.fldPhone": "फ़ोन:",
+  "domains.contacts.fldAddress": "पता:",
+  "domains.contacts.fldState": "राज्य:"
 }
