@@ -245,5 +245,6 @@
   "domains.contacts.hdrRegistrant": "регистрант:",
   "domains.contacts.allInherit": "роли:        все как у регистранта",
   "domains.contacts.dryRunHdr": "Будут обновлены контакты {{.Domain}}:",
-  "domains.contacts.dryRunFoot": "Dry run: ничего не изменено. Передайте --yes для применения."
+  "domains.contacts.dryRunFoot": "Dry run: ничего не изменено. Передайте --yes для применения.",
+  "domains.contacts.confirmHdr": "Обновить WHOIS-контакты {{.Domain}}? Новые контакты:"
 }

@@ -245,5 +245,6 @@
   "domains.contacts.hdrRegistrant": "रजिस्ट्रेंट:",
   "domains.contacts.allInherit": "भूमिकाएँ:      सभी रजिस्ट्रेंट जैसी",
   "domains.contacts.dryRunHdr": "{{.Domain}} के संपर्क अपडेट होंगे:",
-  "domains.contacts.dryRunFoot": "Dry run: कुछ नहीं बदला। लागू करने के लिए --yes दें।"
+  "domains.contacts.dryRunFoot": "Dry run: कुछ नहीं बदला। लागू करने के लिए --yes दें।",
+  "domains.contacts.confirmHdr": "{{.Domain}} के WHOIS संपर्क अपडेट करें? नए संपर्क:"
 }

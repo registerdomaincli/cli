@@ -245,5 +245,6 @@
   "domains.contacts.hdrRegistrant": "注册人：",
   "domains.contacts.allInherit": "角色：      全部与注册人相同",
   "domains.contacts.dryRunHdr": "将更新 {{.Domain}} 的联系人：",
-  "domains.contacts.dryRunFoot": "Dry run：未做任何更改。传入 --yes 以应用。"
+  "domains.contacts.dryRunFoot": "Dry run：未做任何更改。传入 --yes 以应用。",
+  "domains.contacts.confirmHdr": "更新 {{.Domain}} 的 WHOIS 联系人？新联系人："
 }

@@ -245,5 +245,6 @@
   "domains.contacts.hdrRegistrant": "المسجَّل:",
   "domains.contacts.allInherit": "الأدوار:      كلها نفس المسجَّل",
   "domains.contacts.dryRunHdr": "سيُحدِّث جهات اتصال {{.Domain}}:",
-  "domains.contacts.dryRunFoot": "تشغيل جاف: لم يُغيَّر شيء. مرّر --yes للتطبيق."
+  "domains.contacts.dryRunFoot": "تشغيل جاف: لم يُغيَّر شيء. مرّر --yes للتطبيق.",
+  "domains.contacts.confirmHdr": "تحديث جهات اتصال WHOIS للنطاق {{.Domain}}؟ جهات الاتصال الجديدة:"
 }

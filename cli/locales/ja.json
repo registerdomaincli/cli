@@ -245,5 +245,6 @@
   "domains.contacts.hdrRegistrant": "登録者:",
   "domains.contacts.allInherit": "ロール:      すべて登録者と同じ",
   "domains.contacts.dryRunHdr": "{{.Domain}} の連絡先を更新します:",
-  "domains.contacts.dryRunFoot": "ドライラン: 何も変更されていません。--yes で適用します。"
+  "domains.contacts.dryRunFoot": "ドライラン: 何も変更されていません。--yes で適用します。",
+  "domains.contacts.confirmHdr": "{{.Domain}} の WHOIS 連絡先を更新しますか？新しい連絡先："
 }

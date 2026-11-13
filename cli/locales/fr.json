@@ -245,5 +245,6 @@
   "domains.contacts.hdrRegistrant": "titulaire :",
   "domains.contacts.allInherit": "rôles :      tous identiques au titulaire",
   "domains.contacts.dryRunHdr": "Mettrait à jour les contacts de {{.Domain}} :",
-  "domains.contacts.dryRunFoot": "Dry run : rien n'a été modifié. Passez --yes pour appliquer."
+  "domains.contacts.dryRunFoot": "Dry run : rien n'a été modifié. Passez --yes pour appliquer.",
+  "domains.contacts.confirmHdr": "Mettre à jour les contacts WHOIS de {{.Domain}} ? Nouveaux contacts :"
 }

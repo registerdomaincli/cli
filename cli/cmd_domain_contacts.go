@@ -61,6 +61,19 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 			var roles *apitypes.RoleContacts
 			var prompted bool
 			switch {
+			case rf.any():
+				// registrant flags WIN over --own-contact, matching
+				// resolveRegistrantForOrder/Transfer ordering.
+				built, berr := rf.build()
+				if berr != nil {
+					return berr
+				}
+				reg = built
+				var rerr error
+				roles, rerr = resolveRoles(cmd, app, &rolf, reg, false, nil)
+				if rerr != nil {
+					return rerr
+				}
 			case ownContact:
 				// Interactive registrant entry; needs a human on a TTY.
 				if !app.p.stdinIsTTY() {
@@ -78,18 +91,34 @@ func newDomainContactsCmd(app *App) *cobra.Command {
 				if rerr != nil {
 					return rerr
 				}
-			case rf.any():
-				built, berr := rf.build()
-				if berr != nil {
-					return berr
-				}
-				reg = built
-				var rerr error
-				roles, rerr = resolveRoles(cmd, app, &rolf, reg, false, nil)
-				if rerr != nil {
-					return rerr
-				}
 			default:
+				// No saved set (or no default) on an interactive run: ask
+				// for the registrant inline instead of a bare missing-flags
+				// error — the update needs SOME registrant to proceed.
+				sets, gerr := c.ContactSets()
+				if gerr != nil {
+					return fail(gerr)
+				}
+				hasDefault := false
+				for i := range sets.ContactSets {
+					if sets.ContactSets[i].IsDefault {
+						hasDefault = true
+					}
+				}
+				if !hasDefault && app.p.stdinIsTTY() {
+					email := ""
+					if me, merr := c.Me(); merr == nil {
+						email = me.Email
+					}
+					built := app.p.registrant(email)
+					reg, prompted = &built, true
+					var rerr error
+					roles, rerr = resolveRoles(cmd, app, &rolf, reg, prompted, nil)
+					if rerr != nil {
+						return rerr
+					}
+					break
+				}
 				cs, cserr := resolveContactSetForUpdate(cmd, app, contact)
 				if cserr != nil {
 					return cserr
