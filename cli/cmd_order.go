@@ -170,6 +170,7 @@ func newTransferCmd(app *App) *cobra.Command {
 				Registrant:   reg,
 				ContactSetID: setID,
 				RoleContacts: orderRoles,
+				DiscountCode: discount,
 			}
 			created, err := orderFlow(cmd, app, req, dryRun, noWait)
 			if err != nil {

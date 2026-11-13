@@ -122,6 +122,8 @@ func TestRegisterRoleSpecValidation(t *testing.T) {
 		{"--role", "owner=auto", "unknown WHOIS role"},
 		{"--role-admin", "email=x@y.z,not-a-field=1", "invalid admin contact spec"},
 		{"--role", "admin=", "invalid admin contact spec"},
+		{"--role-admin", "", "invalid admin contact spec"},
+		{"--role-tech", "   ", "invalid tech contact spec"},
 	} {
 		args := append(append([]string{}, base...), tc.flag, tc.spec)
 		out := runRootErr(t, args)

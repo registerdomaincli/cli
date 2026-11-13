@@ -80,7 +80,11 @@ func (rf *roleFlags) collect(cmd *cobra.Command) error {
 	}
 	for _, name := range roleNames {
 		v := map[string]string{"admin": rf.admin, "tech": rf.tech, "billing": rf.billing}[name]
-		if strings.TrimSpace(v) == "" {
+		flag := "role-" + name // pflag names carry no leading dashes
+		// An explicitly supplied flag must parse even when empty: letting
+		// "--role-admin=" pass as "not given" would diverge from
+		// "--role admin=" (rejected) and silently inherit contacts.
+		if !cmd.Flags().Changed(flag) {
 			continue
 		}
 		if err := add(name, v); err != nil {
@@ -236,6 +240,11 @@ func promptRoles(p *prompter, reg apitypes.Registrant) *apitypes.RoleContacts {
 		case "billing":
 			rc.Billing = &c
 		}
+	}
+	if rc.Admin == nil && rc.Tech == nil && rc.Billing == nil {
+		// "yes" to the gate but every role declined: stay on the legacy
+		// wire shape (roleContacts absent) instead of an empty object.
+		return nil
 	}
 	return rc
 }
