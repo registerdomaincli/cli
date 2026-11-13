@@ -160,7 +160,7 @@ func TestRegisterRoleSpecNeedsInlineRegistrant(t *testing.T) {
 }
 
 // withContactSets decorates a handler so GET /v1/contact-sets answers with
-// one non-default set labeled "set-with-roles" and no roles.
+// one non-default set labeled "set-with-roles" carrying a standing tech role.
 func withContactSets(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/v1/contact-sets" {
@@ -168,6 +168,9 @@ func withContactSets(next http.Handler) http.Handler {
 				ID:         "cs-roles",
 				Label:      "set-with-roles",
 				Registrant: apitypes.Registrant{FirstName: "S", LastName: "T", Email: "s@example.com"},
+				Roles: &apitypes.RoleContacts{
+					Tech: &apitypes.Registrant{FirstName: "Tech", LastName: "Set", Email: "tech@example.com"},
+				},
 			}}})
 			return
 		}
@@ -210,5 +213,53 @@ func TestContactsShowRoles(t *testing.T) {
 	out = runRoot(t, []string{"--server", s.URL, "--token", "dcl_x", "contacts", "show", "legacy"}, "")
 	if strings.Contains(out, "role admin") {
 		t.Errorf("legacy set must not print roles:\n%s", out)
+	}
+}
+
+// TestRegisterInheritsSetRolesOnWire pins saved-role inheritance: an order
+// via --contact <label> with NO role flags carries the set's standing tech
+// role onto the wire untouched (REPLACE semantics with nothing to replace).
+func TestRegisterInheritsSetRolesOnWire(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var got apitypes.CreateOrderRequest
+	s := newRoleTestServer(t, &got)
+	s.Config.Handler = withContactSets(s.Config.Handler)
+	args := []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"register", "example.com",
+		"--contact", "set-with-roles",
+		"--no-wait",
+	}
+	runRoot(t, args, "")
+	if got.RoleContacts == nil || got.RoleContacts.Tech == nil || got.RoleContacts.Tech.Email != "tech@example.com" {
+		t.Fatalf("order roleContacts = %+v, want the set's tech role on the wire", got.RoleContacts)
+	}
+	if got.RoleContacts.Admin != nil || got.RoleContacts.Billing != nil {
+		t.Fatalf("other roles must stay nil (inherit registrant): %+v", got.RoleContacts)
+	}
+}
+
+// TestRegisterAutoDiscardsSetRoles pins flag precedence: with a saved set
+// carrying roles, an explicit --role-admin registrant spec REPLACES the
+// whole bundle — the set's tech must NOT ride along, and the auto/registrant
+// spec produces no admin contact (roleContacts absent = legacy shape).
+func TestRegisterAutoDiscardsSetRoles(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	t.Setenv("SSH_CONNECTION", "1")
+	var got apitypes.CreateOrderRequest
+	s := newRoleTestServer(t, &got)
+	s.Config.Handler = withContactSets(s.Config.Handler)
+	args := []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"register", "example.com",
+		"--contact", "set-with-roles",
+		"--no-wait", "--role-admin", "registrant",
+	}
+	runRoot(t, args, "")
+	if got.RoleContacts != nil {
+		t.Fatalf("explicit registrant spec must discard the saved bundle, got %+v", got.RoleContacts)
 	}
 }

@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=feld=wert benötigt den Inline-Registranten: übergeben Sie die Registrant-Flags oder --own-contact",
   "contacts.rolesNote": "Nicht gesetzte Rollen erben den Registranten-Kontakt.",
   "contacts.roleFrom": "Rolle {{.Role}}:  {{.Who}}",
-  "contacts.roleInherit": "wie der Registrant"
+  "contacts.roleInherit": "wie der Registrant",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= darf nicht leer sein: {{.Field}} ist ein Pflicht-WHOIS-Feld",
+  "err.role.country": "die Länder-Überschreibung von --role {{.Role}} \"{{.Value}}\" muss ISO 3166-1 alpha-2 sein (2 Buchstaben)"
 }

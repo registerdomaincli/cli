@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=champ=valeur requiert le titulaire en ligne : passez les flags de titulaire ou --own-contact",
   "contacts.rolesNote": "Les rôles non définis héritent du contact du titulaire.",
   "contacts.roleFrom": "rôle {{.Role}} :  {{.Who}}",
-  "contacts.roleInherit": "identique au titulaire"
+  "contacts.roleInherit": "identique au titulaire",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= ne peut pas être vide : {{.Field}} est un champ WHOIS obligatoire",
+  "err.role.country": "la substitution de pays de --role {{.Role}} « {{.Value}} » doit être ISO 3166-1 alpha-2 (2 lettres)"
 }

@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=поле=значение требует встроенного регистранта: передайте flags регистранта или --own-contact",
   "contacts.rolesNote": "Не заданные роли наследуют контакт регистранта.",
   "contacts.roleFrom": "роль {{.Role}}:  {{.Who}}",
-  "contacts.roleInherit": "как у регистранта"
+  "contacts.roleInherit": "как у регистранта",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= не может быть пустым: {{.Field}} — обязательное поле WHOIS",
+  "err.role.country": "подстановка страны в --role {{.Role}} «{{.Value}}» должна быть ISO 3166-1 alpha-2 (2 буквы)"
 }

@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=字段=值 需要内联注册人：请传入注册人 flags 或 --own-contact",
   "contacts.rolesNote": "未设置的角色继承注册人联系人。",
   "contacts.roleFrom": "角色 {{.Role}}：{{.Who}}",
-  "contacts.roleInherit": "与注册人相同"
+  "contacts.roleInherit": "与注册人相同",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= 不能为空：{{.Field}} 是必填的 WHOIS 字段",
+  "err.role.country": "--role {{.Role}} 的国家覆盖值“{{.Value}}”必须是 ISO 3166-1 alpha-2（2 个字母）"
 }

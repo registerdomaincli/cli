@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=campo=valor requer o titular em linha: passe as flags do titular ou --own-contact",
   "contacts.rolesNote": "Papéis não definidos herdam o contacto do titular.",
   "contacts.roleFrom": "papel {{.Role}}:  {{.Who}}",
-  "contacts.roleInherit": "igual ao titular"
+  "contacts.roleInherit": "igual ao titular",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= não pode estar vazio: {{.Field}} é um campo WHOIS obrigatório",
+  "err.role.country": "a substituição de país de --role {{.Role}} \"{{.Value}}\" deve ser ISO 3166-1 alpha-2 (2 letras)"
 }

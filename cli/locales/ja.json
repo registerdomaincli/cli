@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=項目=値 にはインライン登録者が必要です：登録者 flags か --own-contact を指定してください",
   "contacts.rolesNote": "未設定のロールは登録者連絡先を継承します。",
   "contacts.roleFrom": "ロール {{.Role}}:  {{.Who}}",
-  "contacts.roleInherit": "登録者と同じ"
+  "contacts.roleInherit": "登録者と同じ",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= は空にできません：{{.Field}} は必須の WHOIS 項目です",
+  "err.role.country": "--role {{.Role}} の国の上書き「{{.Value}}」は ISO 3166-1 alpha-2（2 文字）である必要があります"
 }

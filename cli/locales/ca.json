@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=camp=valor necessita el contacte en línia: passeu les flags de registrant o --own-contact",
   "contacts.rolesNote": "Els rols no definits hereten el contacte del registrant.",
   "contacts.roleFrom": "rol {{.Role}}:  {{.Who}}",
-  "contacts.roleInherit": "igual que el registrant"
+  "contacts.roleInherit": "igual que el registrant",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= no pot ser buit: {{.Field}} és un camp WHOIS obligatori",
+  "err.role.country": "l'override de país de --role {{.Role}} \"{{.Value}}\" ha de ser ISO 3166-1 alfa-2 (2 lletres)"
 }

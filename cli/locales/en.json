@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=field=value needs the inline registrant: pass the registrant flags or --own-contact",
   "contacts.rolesNote": "Roles left unset inherit the registrant contact.",
   "contacts.roleFrom": "role {{.Role}}:  {{.Who}}",
-  "contacts.roleInherit": "same as registrant"
+  "contacts.roleInherit": "same as registrant",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= cannot be empty: {{.Field}} is a required WHOIS field",
+  "err.role.country": "--role {{.Role}} country override \"{{.Value}}\" must be ISO 3166-1 alpha-2 (2 letters)"
 }

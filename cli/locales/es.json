@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=campo=valor necesita el registrante en línea: pase las flags de registrante o --own-contact",
   "contacts.rolesNote": "Los roles sin definir heredan el contacto del titular.",
   "contacts.roleFrom": "rol {{.Role}}:  {{.Who}}",
-  "contacts.roleInherit": "igual que el titular"
+  "contacts.roleInherit": "igual que el titular",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= no puede estar vacío: {{.Field}} es un campo WHOIS obligatorio",
+  "err.role.country": "la anulación de país de --role {{.Role}} \"{{.Value}}\" debe ser ISO 3166-1 alfa-2 (2 letras)"
 }

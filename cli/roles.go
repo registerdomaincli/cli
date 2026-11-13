@@ -40,6 +40,12 @@ var roleFieldSet = map[string]bool{
 	"city": true, "state": true, "zip": true, "country": true,
 }
 
+// roleOptionalFields are the override-able fields that may be empty; every
+// other roleFieldSet member is required and must stay non-empty.
+var roleOptionalFields = map[string]bool{
+	"organization": true, "address2": true, "state": true,
+}
+
 // addRoleFlags registers --role and --role-<name> on a command.
 func addRoleFlags(cmd *cobra.Command, rf *roleFlags) {
 	cmd.Flags().StringArrayVar(&rf.specs, "role", nil,
@@ -96,6 +102,13 @@ func (rf *roleFlags) collect(cmd *cobra.Command) error {
 
 // parseRoleSpec validates one spec and returns its kind: "auto",
 // "registrant" or "fields" (with the parsed overrides).
+//
+// Override values must respect the same contract as the registrant flags:
+// required fields may not be emptied and country must be two letters —
+// an override like "email=" or "country=USA" would replace a valid value
+// with an invalid contact and fail only at the server, after the user has
+// already confirmed the order. Optional fields (organization, address2,
+// state) accept empty values, like their registrant-flag counterparts.
 func parseRoleSpec(name, spec string) (string, map[string]string, error) {
 	spec = strings.TrimSpace(spec)
 	if spec == "" {
@@ -111,10 +124,17 @@ func parseRoleSpec(name, spec string) (string, map[string]string, error) {
 		}
 		k, v, _ := strings.Cut(kv, "=")
 		k = strings.ToLower(strings.TrimSpace(k))
+		v = strings.TrimSpace(v)
 		if !roleFieldSet[k] {
 			return "", nil, errors.New(i18n.T("err.role.spec", "Role", name, "Spec", spec))
 		}
-		fields[k] = strings.TrimSpace(v)
+		if _, optional := roleOptionalFields[k]; !optional && v == "" {
+			return "", nil, errors.New(i18n.T("err.role.emptyField", "Role", name, "Field", k))
+		}
+		if k == "country" && len(v) != 2 {
+			return "", nil, errors.New(i18n.T("err.role.country", "Role", name, "Field", k, "Value", v))
+		}
+		fields[k] = v
 	}
 	if len(fields) == 0 {
 		return "", nil, errors.New(i18n.T("err.role.spec", "Role", name, "Spec", spec))

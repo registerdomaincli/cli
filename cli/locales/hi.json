@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=फ़ील्ड=मान को इनलाइन रजिस्ट्रेंट चाहिए: रजिस्ट्रेंट flags या --own-contact पास करें",
   "contacts.rolesNote": "असेट न की गई भूमिकाएँ रजिस्ट्रेंट संपर्क को विरासत में लेती हैं।",
   "contacts.roleFrom": "भूमिका {{.Role}}:  {{.Who}}",
-  "contacts.roleInherit": "रजिस्ट्रेंट जैसा ही"
+  "contacts.roleInherit": "रजिस्ट्रेंट जैसा ही",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= खाली नहीं हो सकता: {{.Field}} एक आवश्यक WHOIS फ़ील्ड है",
+  "err.role.country": "--role {{.Role}} का देश ओवरराइड \"{{.Value}}\" ISO 3166-1 alpha-2 (2 अक्षर) होना चाहिए"
 }

@@ -237,5 +237,7 @@
   "err.role.noBase": "--role {{.Role}}=eremua=balioa kontsultak lineako erregistratzailea behar du: eman erregistratzailearen flags edo --own-contact",
   "contacts.rolesNote": "Ezarri gabeko rolak erregistratzailearen kontaktua hartzen dute.",
   "contacts.roleFrom": "rola {{.Role}}:  {{.Who}}",
-  "contacts.roleInherit": "erregistratzailea bezala"
+  "contacts.roleInherit": "erregistratzailea bezala",
+  "err.role.emptyField": "--role {{.Role}}={{.Field}}= ezin da hutsik egon: {{.Field}} WHOIS derrigorrezko eremua da",
+  "err.role.country": "--role {{.Role}} herrialdearen gainidazpena \"{{.Value}}\" ISO 3166-1 alpha-2 izan behar du (2 letrak)"
 }
