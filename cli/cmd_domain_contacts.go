@@ -282,12 +282,12 @@ func printDomainContacts(cmd *cobra.Command, live apitypes.DomainContactsRespons
 
 func printContactFields(cmd *cobra.Command, r apitypes.Registrant) {
 	out := cmd.OutOrStdout()
-	fmt.Fprintf(out, "  name:     %s %s\n", r.FirstName, r.LastName)
-	fmt.Fprintf(out, "  org:      %s\n", withSpace(r.Organization))
-	fmt.Fprintf(out, "  email:    %s\n", r.Email)
-	fmt.Fprintf(out, "  phone:    %s\n", r.Phone)
-	fmt.Fprintf(out, "  address:  %s %s, %s %s, %s\n", r.Address1, withSpace(r.Address2), r.City, r.Zip, r.Country)
-	fmt.Fprintf(out, "  state:    %s\n", r.State)
+	fmt.Fprintf(out, "  %s %s %s\n", i18n.T("domains.contacts.fldName"), r.FirstName, r.LastName)
+	fmt.Fprintf(out, "  %s %s\n", i18n.T("domains.contacts.fldOrg"), withSpace(r.Organization))
+	fmt.Fprintf(out, "  %s %s\n", i18n.T("domains.contacts.fldEmail"), r.Email)
+	fmt.Fprintf(out, "  %s %s\n", i18n.T("domains.contacts.fldPhone"), r.Phone)
+	fmt.Fprintf(out, "  %s %s %s, %s %s, %s\n", i18n.T("domains.contacts.fldAddress"), r.Address1, withSpace(r.Address2), r.City, r.Zip, r.Country)
+	fmt.Fprintf(out, "  %s %s\n", i18n.T("domains.contacts.fldState"), r.State)
 }
 
 func emitDomainContactsPlan(cmd *cobra.Command, domain string, reg apitypes.Registrant, roles *apitypes.RoleContacts) error {

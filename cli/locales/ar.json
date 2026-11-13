@@ -246,5 +246,11 @@
   "domains.contacts.allInherit": "الأدوار:      كلها نفس المسجَّل",
   "domains.contacts.dryRunHdr": "سيُحدِّث جهات اتصال {{.Domain}}:",
   "domains.contacts.dryRunFoot": "تشغيل جاف: لم يُغيَّر شيء. مرّر --yes للتطبيق.",
-  "domains.contacts.confirmHdr": "تحديث جهات اتصال WHOIS للنطاق {{.Domain}}؟ جهات الاتصال الجديدة:"
+  "domains.contacts.confirmHdr": "تحديث جهات اتصال WHOIS للنطاق {{.Domain}}؟ جهات الاتصال الجديدة:",
+  "domains.contacts.fldName": "الاسم:",
+  "domains.contacts.fldOrg": "المنظمة:",
+  "domains.contacts.fldEmail": "البريد:",
+  "domains.contacts.fldPhone": "الهاتف:",
+  "domains.contacts.fldAddress": "العنوان:",
+  "domains.contacts.fldState": "الولاية:"
 }

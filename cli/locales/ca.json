@@ -246,5 +246,11 @@
   "domains.contacts.allInherit": "rols:       tots iguals al registrant",
   "domains.contacts.dryRunHdr": "Actualitzaria els contactes de {{.Domain}}:",
   "domains.contacts.dryRunFoot": "Dry run: no s'ha canviat res. Passa --yes per aplicar.",
-  "domains.contacts.confirmHdr": "Actualitzar els contactes WHOIS de {{.Domain}}? Nous contactes:"
+  "domains.contacts.confirmHdr": "Actualitzar els contactes WHOIS de {{.Domain}}? Nous contactes:",
+  "domains.contacts.fldName": "nom:",
+  "domains.contacts.fldOrg": "org:",
+  "domains.contacts.fldEmail": "correu:",
+  "domains.contacts.fldPhone": "telèfon:",
+  "domains.contacts.fldAddress": "adreça:",
+  "domains.contacts.fldState": "província:"
 }

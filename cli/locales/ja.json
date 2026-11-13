@@ -246,5 +246,11 @@
   "domains.contacts.allInherit": "ロール:      すべて登録者と同じ",
   "domains.contacts.dryRunHdr": "{{.Domain}} の連絡先を更新します:",
   "domains.contacts.dryRunFoot": "ドライラン: 何も変更されていません。--yes で適用します。",
-  "domains.contacts.confirmHdr": "{{.Domain}} の WHOIS 連絡先を更新しますか？新しい連絡先："
+  "domains.contacts.confirmHdr": "{{.Domain}} の WHOIS 連絡先を更新しますか？新しい連絡先：",
+  "domains.contacts.fldName": "名前:",
+  "domains.contacts.fldOrg": "組織:",
+  "domains.contacts.fldEmail": "メール:",
+  "domains.contacts.fldPhone": "電話:",
+  "domains.contacts.fldAddress": "住所:",
+  "domains.contacts.fldState": "都道府県:"
 }

@@ -246,5 +246,11 @@
   "domains.contacts.allInherit": "rolak:       denak erregistratzailea bezala",
   "domains.contacts.dryRunHdr": "{{.Domain}} kontaktuak eguneratuko lituzke:",
   "domains.contacts.dryRunFoot": "Dry run: ez da ezer aldatu. Pasatu --yes ezartzeko.",
-  "domains.contacts.confirmHdr": "{{.Domain}} domeinuaren WHOIS kontaktuak eguneratu? kontaktu berriak:"
+  "domains.contacts.confirmHdr": "{{.Domain}} domeinuaren WHOIS kontaktuak eguneratu? kontaktu berriak:",
+  "domains.contacts.fldName": "izena:",
+  "domains.contacts.fldOrg": "org:",
+  "domains.contacts.fldEmail": "posta:",
+  "domains.contacts.fldPhone": "telefonoa:",
+  "domains.contacts.fldAddress": "helbidea:",
+  "domains.contacts.fldState": "probintzia:"
 }

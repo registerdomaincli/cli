@@ -246,5 +246,11 @@
   "domains.contacts.allInherit": "rollen:      alle wie der Registrant",
   "domains.contacts.dryRunHdr": "Würde die Kontakte von {{.Domain}} aktualisieren:",
   "domains.contacts.dryRunFoot": "Dry run: nichts wurde geändert. Mit --yes anwenden.",
-  "domains.contacts.confirmHdr": "WHOIS-Kontakte von {{.Domain}} aktualisieren? Neue Kontakte:"
+  "domains.contacts.confirmHdr": "WHOIS-Kontakte von {{.Domain}} aktualisieren? Neue Kontakte:",
+  "domains.contacts.fldName": "name:",
+  "domains.contacts.fldOrg": "org:",
+  "domains.contacts.fldEmail": "e-mail:",
+  "domains.contacts.fldPhone": "telefon:",
+  "domains.contacts.fldAddress": "adresse:",
+  "domains.contacts.fldState": "bundesland:"
 }

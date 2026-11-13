@@ -246,5 +246,11 @@
   "domains.contacts.allInherit": "roles:      all same as registrant",
   "domains.contacts.dryRunHdr": "Would update the contacts of {{.Domain}}:",
   "domains.contacts.dryRunFoot": "Dry run: nothing was changed. Pass --yes to apply.",
-  "domains.contacts.confirmHdr": "Update the WHOIS contacts of {{.Domain}}? New contacts:"
+  "domains.contacts.confirmHdr": "Update the WHOIS contacts of {{.Domain}}? New contacts:",
+  "domains.contacts.fldName": "name:",
+  "domains.contacts.fldOrg": "org:",
+  "domains.contacts.fldEmail": "email:",
+  "domains.contacts.fldPhone": "phone:",
+  "domains.contacts.fldAddress": "address:",
+  "domains.contacts.fldState": "state:"
 }

@@ -66,8 +66,13 @@ func TestDomainsContactsShow(t *testing.T) {
 	if !strings.Contains(out, "registrant:") || !strings.Contains(out, "ada@example.com") {
 		t.Errorf("registrant block missing:\n%s", out)
 	}
-	if !strings.Contains(out, "role tech:") && !strings.Contains(out, "Tech") && !strings.Contains(out, "tech@example.com") {
-		t.Errorf("tech role missing:\n%s", out)
+	// Precise assertion: the tech role line must carry the override email
+	// AND its full contact block (the inherited fields ride along).
+	if !strings.Contains(out, "tech@example.com") {
+		t.Errorf("tech override email missing:\n%s", out)
+	}
+	if !strings.Contains(out, "+44.1234567890") || !strings.Contains(out, "1 Main St") {
+		t.Errorf("tech full contact block missing (inherited fields):\n%s", out)
 	}
 	if strings.Contains(out, "all same as registrant") {
 		t.Errorf("all-inherit line must not print when a role is set:\n%s", out)
