@@ -151,10 +151,15 @@ type QuoteResponse struct {
 	Discount   *DiscountApp `json:"discount,omitempty"` // order-level; see Quote.Discount
 }
 
-// Registrant is the WHOIS registrant contact. Organization, Address2 and
-// State are optional; everything else is required. Registrations are made in
-// the client's name: this contact is the customer of record for the
-// registration, so the customer is the Registered Name Holder.
+// Registrant is the WHOIS contact. Organization, Address2 and State are
+// optional; everything else is required. Registrations are made in the
+// client's name: the registrant is the customer of record, so the customer
+// is the Registered Name Holder.
+//
+// Name registries also carry admin, tech and billing roles. When the
+// server sends only a registrant, the other three default to the REGISTRANT
+// (never the reseller account) — this struct is the single shape used for
+// every role, so a role contact is the same nine fields.
 type Registrant struct {
 	FirstName    string `json:"firstName"`
 	LastName     string `json:"lastName"`
@@ -193,8 +198,19 @@ type CreateOrderRequest struct {
 	Currency       string           `json:"currency,omitempty"`     // ISO 4217, lowercase; empty = server default
 	DiscountCode   string           `json:"discountCode,omitempty"` // optional; revalidated server-side at order time
 	Registrant     *Registrant      `json:"registrant,omitempty"`
+	RoleContacts   *RoleContacts    `json:"roleContacts,omitempty"`
 	ContactSetID   string           `json:"contactSetId,omitempty"`
 	UseSavedMethod *bool            `json:"useSavedMethod,omitempty"`
+}
+
+// RoleContacts carries the non-registrant WHOIS roles. Every pointer is
+// tri-state: nil inherits the registrant, non-nil is used verbatim. There
+// is no way to delegate a role to the reseller — upstream never gets a
+// contact we did not validate.
+type RoleContacts struct {
+	Admin   *Registrant `json:"admin,omitempty"`
+	Tech    *Registrant `json:"tech,omitempty"`
+	Billing *Registrant `json:"billing,omitempty"`
 }
 
 // OrderItemInput is one domain inside a multi-domain order. Years 0
@@ -222,22 +238,23 @@ type OrderItem struct {
 // InvoiceURL is a pre-signed absolute URL (24 h validity) so it can be opened
 // in a browser that carries no Authorization header.
 type Order struct {
-	ID            string       `json:"id"`
-	Kind          string       `json:"kind"`
-	Domain        string       `json:"domain"`
-	Items         []OrderItem  `json:"items,omitempty"` // per-domain lines on multi-domain orders
-	Years         int          `json:"years"`
-	NetCents      int64        `json:"netCents"`
-	TaxCents      int64        `json:"taxCents"`
-	TotalCents    int64        `json:"totalCents"`
-	Currency      string       `json:"currency"`
-	Discount      *DiscountApp `json:"discount,omitempty"` // the accepted discount, already in NetCents
-	Status        string       `json:"status"`             // pending_payment | paid | processing | completed | failed | refunded | expired | cancelled
-	CheckoutURL   string       `json:"checkoutUrl"`
-	InvoiceNumber string       `json:"invoiceNumber,omitempty"`
-	InvoiceURL    string       `json:"invoiceUrl,omitempty"`
-	FailureReason string       `json:"failureReason,omitempty"`
-	CreatedAt     time.Time    `json:"createdAt"`
+	ID            string        `json:"id"`
+	Kind          string        `json:"kind"`
+	Domain        string        `json:"domain"`
+	Items         []OrderItem   `json:"items,omitempty"` // per-domain lines on multi-domain orders
+	Years         int           `json:"years"`
+	NetCents      int64         `json:"netCents"`
+	TaxCents      int64         `json:"taxCents"`
+	TotalCents    int64         `json:"totalCents"`
+	Currency      string        `json:"currency"`
+	Discount      *DiscountApp  `json:"discount,omitempty"` // the accepted discount, already in NetCents
+	Status        string        `json:"status"`             // pending_payment | paid | processing | completed | failed | refunded | expired | cancelled
+	CheckoutURL   string        `json:"checkoutUrl"`
+	InvoiceNumber string        `json:"invoiceNumber,omitempty"`
+	InvoiceURL    string        `json:"invoiceUrl,omitempty"`
+	RoleContacts  *RoleContacts `json:"roleContacts,omitempty"` // resolved per-role contacts; nil = all roles are the registrant
+	FailureReason string        `json:"failureReason,omitempty"`
+	CreatedAt     time.Time     `json:"createdAt"`
 }
 
 // SignupResponse acknowledges that the verification email was sent. The
@@ -280,13 +297,18 @@ type BillingProfile struct {
 	Country   string `json:"country"`
 }
 
-// ContactSet is a saved registrant contact (contact-sets endpoints).
+// ContactSet is a saved contact set. Registrant is required; Roles is nil
+// for sets saved before per-role contacts existed (all roles = registrant).
 type ContactSet struct {
-	ID         string     `json:"id"`
-	Label      string     `json:"label"`
-	Registrant Registrant `json:"registrant"`
-	IsDefault  bool       `json:"isDefault"`
+	ID         string        `json:"id"`
+	Label      string        `json:"label"`
+	Registrant Registrant    `json:"registrant"`
+	IsDefault  bool          `json:"isDefault"`
+	Roles      *RoleContacts `json:"roles,omitempty"`
 }
+
+// Expanded reports whether the set carries per-role contacts.
+func (cs *ContactSet) Expanded() bool { return cs.Roles != nil }
 
 // PortalResponse carries the Stripe Billing Portal URL.
 type PortalResponse struct {

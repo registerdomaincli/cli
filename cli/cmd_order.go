@@ -26,6 +26,7 @@ func newRegisterCmd(app *App) *cobra.Command {
 	var contact, saveContact string
 	var dryRun, noWait bool
 	var rf registrantFlags
+	var rolf roleFlags
 	cmd := &cobra.Command{
 		Use:   "register <domain...>",
 		Short: i18n.T("register.short"),
@@ -35,20 +36,32 @@ func newRegisterCmd(app *App) *cobra.Command {
 			if years < 1 || years > 10 {
 				return errors.New(i18n.T("err.invalidYears"))
 			}
+			// Flag syntax fails fast, before any network call.
+			if err := rolf.collect(cmd); err != nil {
+				return err
+			}
 			var reg *apitypes.Registrant
+			var orderRoles *apitypes.RoleContacts
+			var setRoles *apitypes.RoleContacts
 			var setID string
 			var prompted bool
 			if !dryRun {
 				var err error
-				reg, setID, prompted, err = resolveRegistrantForOrder(cmd, app, ownContact, contact, &rf)
+				reg, setRoles, setID, prompted, err = resolveRegistrantForOrder(cmd, app, ownContact, contact, &rf)
 				if err != nil {
 					return err
 				}
+				roles, err := resolveRoles(cmd, app, &rolf, reg, prompted, setRoles)
+				if err != nil {
+					return err
+				}
+				orderRoles = roles
 			}
 			req := apitypes.CreateOrderRequest{
 				Kind:         "registration",
 				Years:        years,
 				Registrant:   reg,
+				RoleContacts: orderRoles,
 				ContactSetID: setID,
 				DiscountCode: discount,
 			}
@@ -66,13 +79,13 @@ func newRegisterCmd(app *App) *cobra.Command {
 			if created && reg != nil {
 				if saveContact != "" {
 					// Explicit parameter beats the interactive offer.
-					if _, err := app.Client.CreateContactSet(saveContact, *reg); err != nil {
+					if _, err := app.Client.CreateContactSet(saveContact, *reg, orderRoles); err != nil {
 						fmt.Fprintln(cmd.ErrOrStderr(), fail(err))
 					} else {
 						fmt.Fprintln(cmd.OutOrStdout(), i18n.T("contacts.saved", "Label", saveContact))
 					}
 				} else {
-					maybeSaveContactSet(cmd, app, reg, prompted)
+					maybeSaveContactSet(cmd, app, reg, orderRoles, prompted)
 				}
 			}
 			return nil
@@ -87,6 +100,7 @@ func newRegisterCmd(app *App) *cobra.Command {
 	cmd.Flags().BoolVar(&newPaymentMethodFlag, "new-payment-method", false, "pay with a new payment method even if one is saved (skips the fast no-browser checkout)")
 	cmd.Flags().StringVar(&discount, "discount", "", "apply the discount code with this name to the order")
 	addRegistrantFlags(cmd, &rf)
+	addRoleFlags(cmd, &rolf)
 	return cmd
 }
 
@@ -121,6 +135,7 @@ func newTransferCmd(app *App) *cobra.Command {
 	var authCode string
 	var ownContact bool
 	var rf registrantFlags
+	var rolf roleFlags
 	var dryRun, noWait bool
 	var discount string
 	cmd := &cobra.Command{
@@ -129,10 +144,18 @@ func newTransferCmd(app *App) *cobra.Command {
 		Long:  i18n.T("transfer.long"),
 		Args:  exactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Flag syntax fails fast, before any network call.
+			if err := rolf.collect(cmd); err != nil {
+				return err
+			}
 			if strings.TrimSpace(authCode) == "" {
 				return missingFlags("--auth-code")
 			}
-			reg, setID, prompted, err := resolveRegistrantForTransfer(cmd, app, ownContact, contact, &rf)
+			reg, setRoles, setID, prompted, err := resolveRegistrantForTransfer(cmd, app, ownContact, contact, &rf)
+			if err != nil {
+				return err
+			}
+			orderRoles, err := resolveRoles(cmd, app, &rolf, reg, prompted, setRoles)
 			if err != nil {
 				return err
 			}
@@ -146,6 +169,7 @@ func newTransferCmd(app *App) *cobra.Command {
 				AuthCode:     authCode,
 				Registrant:   reg,
 				ContactSetID: setID,
+				RoleContacts: orderRoles,
 				DiscountCode: discount,
 			}
 			created, err := orderFlow(cmd, app, req, dryRun, noWait)
@@ -156,7 +180,7 @@ func newTransferCmd(app *App) *cobra.Command {
 				if !jsonFlag {
 					fmt.Fprintln(cmd.OutOrStdout(), i18n.T("transfer.note"))
 				}
-				maybeSaveContactSet(cmd, app, reg, prompted)
+				maybeSaveContactSet(cmd, app, reg, orderRoles, prompted)
 			}
 			return nil
 		},
@@ -169,6 +193,7 @@ func newTransferCmd(app *App) *cobra.Command {
 	cmd.Flags().BoolVar(&newPaymentMethodFlag, "new-payment-method", false, "pay with a new payment method even if one is saved (skips the fast no-browser checkout)")
 	cmd.Flags().StringVar(&discount, "discount", "", "apply the discount code with this name to the order")
 	addRegistrantFlags(cmd, &rf)
+	addRoleFlags(cmd, &rolf)
 	return cmd
 }
 

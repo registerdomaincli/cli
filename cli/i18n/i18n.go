@@ -15,8 +15,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/registerdomaincli/cli/cli/locales"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/registerdomaincli/cli/cli/locales"
 	"golang.org/x/text/language"
 )
 

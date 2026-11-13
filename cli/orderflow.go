@@ -234,10 +234,14 @@ func pollOrder(cmd *cobra.Command, c *Client, id string) error {
 // default set. When no default set exists the user is prompted; the caller
 // offers to save the answers as a new contact set. The bool reports whether
 // an inline prompt happened.
-func resolveRegistrant(cmd *cobra.Command, app *App, ownContact bool, contactLabel string) (*apitypes.Registrant, string, bool, error) {
+//
+// Roles ride along: a saved contact set's own per-role contacts are
+// returned with it; the inline path returns nil and lets the caller's
+// --role* flags / interactive prompt fill them.
+func resolveRegistrant(cmd *cobra.Command, app *App, ownContact bool, contactLabel string) (*apitypes.Registrant, *apitypes.RoleContacts, string, bool, error) {
 	c, err := app.requireClient()
 	if err != nil {
-		return nil, "", false, err
+		return nil, nil, "", false, err
 	}
 	switch {
 	case ownContact:
@@ -245,7 +249,7 @@ func resolveRegistrant(cmd *cobra.Command, app *App, ownContact bool, contactLab
 		// one to answer — fail naming the parametric flags instead of
 		// blocking on a pipe or proceeding with empty fields.
 		if !app.p.stdinIsTTY() {
-			return nil, "", false, missingFlags("--first-name", "--last-name",
+			return nil, nil, "", false, missingFlags("--first-name", "--last-name",
 				"--email", "--phone", "--address1", "--city", "--zip", "--country")
 		}
 		email := ""
@@ -253,33 +257,41 @@ func resolveRegistrant(cmd *cobra.Command, app *App, ownContact bool, contactLab
 			email = me.Email
 		}
 		reg := app.p.registrant(email)
-		return &reg, "", true, nil
+		return &reg, nil, "", true, nil
 	case contactLabel != "":
 		sets, err := c.ContactSets()
 		if err != nil {
-			return nil, "", false, fail(err)
+			return nil, nil, "", false, fail(err)
 		}
 		for _, s := range sets.ContactSets {
 			if s.Label == contactLabel {
-				return nil, s.ID, false, nil
+				return nil, s.Roles, s.ID, false, nil
 			}
 		}
-		return nil, "", false, errors.New(i18n.T("contacts.notFound", "Label", contactLabel))
+		return nil, nil, "", false, errors.New(i18n.T("contacts.notFound", "Label", contactLabel))
 	default:
 		sets, err := c.ContactSets()
 		if err != nil {
-			return nil, "", false, fail(err)
+			return nil, nil, "", false, fail(err)
 		}
 		for _, s := range sets.ContactSets {
 			if s.IsDefault {
-				return nil, "", false, nil
+				// Roles ride on this exact set: pin its ID so the server
+				// resolves the registrant from the SAME snapshot — a
+				// default-set change between now and order creation cannot
+				// pair the old roles with a new registrant. Without roles
+				// the legacy empty-ID payload stays unchanged.
+				if s.Roles != nil {
+					return nil, s.Roles, s.ID, false, nil
+				}
+				return nil, nil, "", false, nil
 			}
 		}
 		// Contacts are mandatory for registration and transfer; with no
 		// default set the server would reject the order. Prompt only when a
 		// human is attached; agents pass the registrant flags or --contact.
 		if !app.p.stdinIsTTY() {
-			return nil, "", false, missingFlags("--contact", "--first-name", "--last-name",
+			return nil, nil, "", false, missingFlags("--contact", "--first-name", "--last-name",
 				"--email", "--phone", "--address1", "--city", "--zip", "--country")
 		}
 		email := ""
@@ -287,16 +299,16 @@ func resolveRegistrant(cmd *cobra.Command, app *App, ownContact bool, contactLab
 			email = me.Email
 		}
 		reg := app.p.registrant(email)
-		return &reg, "", true, nil
+		return &reg, nil, "", true, nil
 	}
 }
 
 // resolveRegistrantForOrder resolves the registrant for registration:
 // flags > --contact label > default set > interactive prompt (TTY) > error.
-func resolveRegistrantForOrder(cmd *cobra.Command, app *App, ownContact bool, contactLabel string, rf *registrantFlags) (*apitypes.Registrant, string, bool, error) {
+func resolveRegistrantForOrder(cmd *cobra.Command, app *App, ownContact bool, contactLabel string, rf *registrantFlags) (*apitypes.Registrant, *apitypes.RoleContacts, string, bool, error) {
 	if rf.any() {
 		reg, err := rf.build()
-		return reg, "", false, err
+		return reg, nil, "", false, err
 	}
 	return resolveRegistrant(cmd, app, ownContact, contactLabel)
 }
@@ -305,10 +317,10 @@ func resolveRegistrantForOrder(cmd *cobra.Command, app *App, ownContact bool, co
 // mandatory there too, and without registrant flags (or --own-contact, or a
 // saved set) on a non-TTY stdin the command fails naming them (never a
 // silent default that would make someone else the registrant).
-func resolveRegistrantForTransfer(cmd *cobra.Command, app *App, ownContact bool, contactLabel string, rf *registrantFlags) (*apitypes.Registrant, string, bool, error) {
+func resolveRegistrantForTransfer(cmd *cobra.Command, app *App, ownContact bool, contactLabel string, rf *registrantFlags) (*apitypes.Registrant, *apitypes.RoleContacts, string, bool, error) {
 	if rf.any() {
 		reg, err := rf.build()
-		return reg, "", false, err
+		return reg, nil, "", false, err
 	}
 	return resolveRegistrant(cmd, app, ownContact, contactLabel)
 }
@@ -328,7 +340,7 @@ func noWaitFlag(cmd *cobra.Command) bool {
 }
 
 // resolveRegistrant implements the CLI side of the registrant precedence:
-func maybeSaveContactSet(cmd *cobra.Command, app *App, reg *apitypes.Registrant, prompted bool) {
+func maybeSaveContactSet(cmd *cobra.Command, app *App, reg *apitypes.Registrant, roles *apitypes.RoleContacts, prompted bool) {
 	if !prompted || reg == nil {
 		return
 	}
@@ -337,7 +349,7 @@ func maybeSaveContactSet(cmd *cobra.Command, app *App, reg *apitypes.Registrant,
 		return
 	}
 	label := app.p.required(i18n.T("contacts.labelPrompt"))
-	if _, err := app.Client.CreateContactSet(label, *reg); err != nil {
+	if _, err := app.Client.CreateContactSet(label, *reg, roles); err != nil {
 		fmt.Fprintln(cmd.ErrOrStderr(), fail(err))
 		return
 	}
