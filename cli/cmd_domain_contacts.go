@@ -276,6 +276,7 @@ func printDomainContacts(cmd *cobra.Command, live apitypes.DomainContactsRespons
 		}
 		fmt.Fprintln(out, i18n.T("contacts.roleFrom", "Role", name,
 			"Who", rc.FirstName+" "+rc.LastName+" <"+rc.Email+">"))
+		printContactFields(cmd, *rc)
 	}
 }
 
