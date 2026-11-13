@@ -296,6 +296,7 @@ func promptRoleContact(p *prompter, role string, reg apitypes.Registrant) apityp
 	c.Address2 = keep("role.prompt.address2", reg.Address2)
 	c.City = keep("role.prompt.city", reg.City)
 	c.State = keep("role.prompt.state", reg.State)
+	c.Zip = keep("role.prompt.zip", reg.Zip)
 	// Country must satisfy the same contract as the flags and the server:
 	// two ASCII letters. Enter keeps the current value unchanged (even if
 	// the registrant's own country is imperfect — the registrant itself
