@@ -234,6 +234,9 @@ func printRoleSummary(cmd *cobra.Command, roles *apitypes.RoleContacts) {
 		}
 		fmt.Fprintln(cmd.OutOrStdout(), i18n.T("contacts.roleFrom", "Role", name,
 			"Who", rc.FirstName+" "+rc.LastName+" <"+rc.Email+">"))
+		// The human approves a registrar-level change; every material
+		// field of an explicit role must be visible before the y/N.
+		printContactFields(cmd, *rc)
 	}
 }
 
