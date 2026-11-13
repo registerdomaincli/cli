@@ -209,3 +209,43 @@ func registrantFixture(email string) apitypes.Registrant {
 }
 
 func ptrReg(r apitypes.Registrant) *apitypes.Registrant { return &r }
+
+// TestDomainsContactsApprovalGate pins the human-approval boundary: an
+// update WITHOUT --yes on a non-TTY stdin fails naming --yes (nothing is
+// sent), and an interactive run answering "y" proceeds to the PUT.
+func TestDomainsContactsApprovalGate(t *testing.T) {
+	setConfigDir(t)
+	setLocale(t, "en")
+	api := &domainContactsAPI{live: apitypes.DomainContactsResponse{Registrant: registrantFixture("ada@example.com")}}
+	h := api.handler(t)
+	s := fakeServer(t, h.ServeHTTP)
+
+	// non-interactive without --yes: refused, no upstream call
+	out := runRootErr(t, []string{
+		"--server", s.URL, "--token", "dcl_x",
+		"domains", "contacts", "probe-edit.example",
+		"--first-name", "Ada", "--last-name", "Lovelace",
+		"--email", "ada@example.com", "--phone", "+44.1234567890",
+		"--address1", "1 Main St", "--city", "London", "--zip", "12345",
+		"--country", "GB",
+	})
+	if api.lastPut != nil {
+		t.Fatalf("update sent without approval: %+v", api.lastPut)
+	}
+	if !strings.Contains(out, "--yes") {
+		t.Errorf("expected the error to name --yes, got:\n%s", out)
+	}
+
+	// non-interactive WITH --yes: proceeds
+	runRoot(t, []string{
+		"--server", s.URL, "--token", "dcl_x", "--yes",
+		"domains", "contacts", "probe-edit.example",
+		"--first-name", "Ada", "--last-name", "Lovelace",
+		"--email", "ada@example.com", "--phone", "+44.1234567890",
+		"--address1", "1 Main St", "--city", "London", "--zip", "12345",
+		"--country", "GB",
+	}, "")
+	if api.lastPut == nil {
+		t.Fatal("update with --yes never sent")
+	}
+}
