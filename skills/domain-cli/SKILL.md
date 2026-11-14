@@ -1,6 +1,6 @@
 ---
 name: domain-cli
-description: Search, register, renew, transfer, and manage DNS for domains via RegisterDomainCLI — use when the user wants to find or buy a domain, or manage DNS records/nameservers for domains they own there
+description: Search, register, renew, transfer, and manage DNS for domains via RegisterDomainCLI — use when the user wants to find or buy a domain, or manage DNS records/nameservers for domains they own there. The user just asks in plain language; you run every step for them
 ---
 
 # RegisterDomainCLI — domain search, registration, and DNS from the CLI
@@ -8,6 +8,30 @@ description: Search, register, renew, transfer, and manage DNS for domains via R
 `domain-cli` searches domain availability, registers/renews/transfers
 domains through RegisterDomainCLI, and manages DNS records, nameservers,
 contacts, and billing for domains the user owns there.
+
+## Do the work for the user — they should not need to learn commands
+
+The whole point of this skill is that the human just asks — "I want to
+register a domain through registerdomaincli.com for my bakery", "point
+example.com at my server", "renew it for two years" — and you do the rest.
+
+- **Run the commands yourself.** Do not answer with a list of `domain-cli`
+  commands for the human to type. Show or explain a command only when they
+  ask how it works or say they want to run it themselves.
+- **Missing pieces are your job too.** No `domain-cli` on the machine →
+  install it (see **Install**), telling the human first. No account → run
+  `signup` and ask them only for the emailed 6-digit code. No contact set or
+  billing profile → ask for the data in plain language and save it.
+- **Turn intent into steps.** "Something short for my bakery" → search
+  sensible keywords and TLDs (`domain-cli tlds --group …`), shortlist a few
+  with prices, let them pick. "Set up email" → ask for their provider and
+  create the records it documents.
+- **The human only does what must be human:** type the emailed code, approve
+  the quoted total and the payment method, complete payment in their own
+  browser, and confirm the guarded actions described below (unlock/auth
+  code, nameserver changes, record deletion, contact changes, autorenew on).
+  Everything else you do without asking them to touch a terminal.
+- **No shell?** Same rule, through the hosted MCP server tools.
 
 ## Install
 
@@ -180,6 +204,7 @@ production).
 | `domain-cli domains` | List owned domains (expiry, autorenew, privacy, lock). |
 | `domain-cli domains authcode <domain>` | Print the transfer (EPP) code. Asks for confirmation; the domain must be unlocked first (`domains unlock`). |
 | `domain-cli domains lock <domain>` / `unlock <domain>` | Toggle transfer lock. `unlock` asks for confirmation; `lock` does not. |
+| `domain-cli domains contacts <domain> [--contact <label> \| --own-contact \| --role-<name> <spec>] [--dry-run]` | Show the live WHOIS contacts of an owned domain, or replace them (asks for confirmation; `--yes` non-interactively). A registrant change may trigger ICANN email verification and a registrar transfer lock — tell the human before applying it. CLI only: the MCP server has no tool for it yet. |
 | `domain-cli domains autorenew <domain> on\|off` | Toggle autorenew. Turning it **on** authorises a recurring annual charge and asks for confirmation. |
 | `domain-cli dns list <domain>` | List DNS records. |
 | `domain-cli dns set <domain> <TYPE> <host> <answer> [--ttl 3600]` | Create a DNS record. |
