@@ -31,9 +31,21 @@ example.com at my server", "renew it for two years" — and you do the rest.
   browser, and confirm the guarded actions described below (unlock/auth
   code, nameserver changes, record deletion, contact changes, autorenew on).
   Everything else you do without asking them to touch a terminal.
+- **Have a shell? Use the CLI, and install it yourself.** That is why
+  RegisterDomainCLI ships a CLI and not only an MCP server: installing
+  `domain-cli` is one command you can run on your own once the human says
+  yes, with no configuration and no restart. Adding an MCP server usually
+  has to be done by hand by the human, and even when you can edit the
+  config yourself the harness normally needs a restart before the tools
+  show up. So never send a human with a shell off to set up the MCP
+  connector. Install the CLI instead. (If the connector is already
+  connected in this session, using it is fine.)
 - **No shell?** Same rule, through the hosted MCP server tools.
 
 ## Install
+
+Ask the human once ("Can I install domain-cli? It is a single binary in
+~/.local/bin, no root needed"), then run the command yourself:
 
 - Linux/macOS: `curl -fsSL https://registerdomaincli.com/install.sh | sh`
 - Windows (PowerShell): download `domain-cli-windows-amd64.exe` from the
@@ -106,8 +118,10 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   server bills from the domain's registrant contact and charges the default
   VAT rate (no reverse charge / no exemption). Ask the human for their billing
   data (legal name, address, and VAT/tax ID if any) and save them with
-  `domain-cli billing set` — for EU businesses a valid VAT ID makes the server
-  apply the reverse charge (0% VAT) instead of the domestic rate.
+  `domain-cli billing set`. VAT follows the buyer's country: buyers in Spain
+  always pay Spanish VAT; businesses in another EU country whose VAT ID
+  passes VIES verification get the reverse charge (0%); buyers outside the
+  EU pay no VAT. Never promise an exemption — the quote shows the result.
   Quotes carry `netCents`/`taxCents`/`totalCents`: always confirm the
   `totalCents` figure with the human before `--yes`.
 - **JSON output**: the global `--json` flag prints the API response object
@@ -143,7 +157,9 @@ exits immediately with `missing required flag(s): …` — it never hangs.
 
 Mobile agent apps (Claude, Gemini) and other environments without a real
 terminal cannot run `domain-cli`. Talk to the hosted MCP server instead —
-same account, same dcl_ token, same API:
+same account, same dcl_ token, same API. This path is for agents WITHOUT a
+shell: with a shell, install the CLI (see above) rather than asking the
+human to configure a connector and restart.
 
 - **Endpoint**: `https://registerdomaincli.com/v1/mcp` (MCP over streamable
   HTTP, JSON-RPC; protocol version 2025-06-18).
