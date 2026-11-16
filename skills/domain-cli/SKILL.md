@@ -118,8 +118,10 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   server bills from the domain's registrant contact and charges the default
   VAT rate (no reverse charge / no exemption). Ask the human for their billing
   data (legal name, address, and VAT/tax ID if any) and save them with
-  `domain-cli billing set` — for EU businesses a valid VAT ID makes the server
-  apply the reverse charge (0% VAT) instead of the domestic rate.
+  `domain-cli billing set`. VAT follows the buyer's country: buyers in Spain
+  always pay Spanish VAT; businesses in another EU country whose VAT ID
+  passes VIES verification get the reverse charge (0%); buyers outside the
+  EU pay no VAT. Never promise an exemption — the quote shows the result.
   Quotes carry `netCents`/`taxCents`/`totalCents`: always confirm the
   `totalCents` figure with the human before `--yes`.
 - **JSON output**: the global `--json` flag prints the API response object
