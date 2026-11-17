@@ -1,0 +1,22 @@
+{
+  "name": "registerdomaincli",
+  "displayName": "RegisterDomainCLI",
+  "version": "1.0.0",
+  "description": "Search, register, renew and transfer domains and manage DNS, nameservers and contacts with RegisterDomainCLI: the hosted MCP connector plus the domain-cli agent skill.",
+  "author": {
+    "name": "RegisterDomainCLI",
+    "email": "support@registerdomaincli.com",
+    "url": "https://registerdomaincli.com"
+  },
+  "homepage": "https://registerdomaincli.com/en/docs/claude",
+  "repository": "https://github.com/registerdomaincli/cli",
+  "license": "Apache-2.0",
+  "privacyPolicyUrl": "https://registerdomaincli.com/en/legal/privacy",
+  "keywords": [
+    "domains",
+    "dns",
+    "registrar",
+    "nameservers",
+    "whois"
+  ]
+}

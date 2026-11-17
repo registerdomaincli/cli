@@ -20,3 +20,17 @@ jobs:
           go build ./...
           go vet ./...
           go test ./...
+
+  plugin:
+    # plugin/ is the Claude directory plugin bundle. Everything a plugin
+    # loads must live inside its folder (no symlinks), so the skill is a
+    # copy of skills/domain-cli/SKILL.md — this keeps the two identical.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          cmp skills/domain-cli/SKILL.md plugin/skills/domain-cli/SKILL.md || {
+            echo "::error::plugin/skills/domain-cli/SKILL.md differs from skills/domain-cli/SKILL.md; run: cp skills/domain-cli/SKILL.md plugin/skills/domain-cli/SKILL.md"
+            exit 1
+          }
+          cmp LICENSE plugin/LICENSE

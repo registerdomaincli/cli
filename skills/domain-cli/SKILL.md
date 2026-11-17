@@ -164,12 +164,13 @@ human to configure a connector and restart.
 - **Endpoint**: `https://registerdomaincli.com/v1/mcp` (MCP over streamable
   HTTP, JSON-RPC; protocol version 2025-06-18).
 - **Auth — prefer OAuth**: connector clients (Claude, Gemini) should run the
-  OAuth flow: a 401 from `tools/call` carries `WWW-Authenticate: Bearer
-  resource_metadata=…` → protected-resource metadata → authorization-server
-  metadata at
+  OAuth flow: any request without a valid token gets an HTTP 401 carrying
+  `WWW-Authenticate: Bearer resource_metadata=…` → protected-resource
+  metadata → authorization-server metadata at
   `https://registerdomaincli.com/.well-known/oauth-authorization-server/v1/mcp/oauth`
-  → dynamic client registration (`POST /v1/mcp/oauth/register`, public
-  client) → open `/v1/mcp/oauth/authorize` in the human's browser: they sign
+  → Claude's published client identity (CIMD) or dynamic client registration
+  (`POST /v1/mcp/oauth/register`, public client) → open
+  `/v1/mcp/oauth/authorize` in the human's browser: they sign
   in with email + the emailed 6-digit code (the same login as the CLI and
   the panel) → exchange the code (PKCE S256) at `/v1/mcp/oauth/token`. The
   access token is a normal dcl_ token. No token copying for the human.
@@ -191,8 +192,14 @@ human to configure a connector and restart.
   `set_domain_contacts`, `delete_contact_set` refuse without
   `confirm: true`; `set_lock` needs it to unlock; `set_autorenew` needs it
   to enable. Ask the human in chat first, exactly as with `--yes`.
-- **Payment is a human decision**: before the first `create_order` of a
-  session, call `list_payment_methods`. If one is saved, ask the human:
+- **From Claude, payment always goes through checkout**: when the connector
+  is used from Claude (claude.ai, the Claude apps or Claude Code signed in
+  through OAuth), `create_order` never charges a saved payment method — it
+  always returns a `checkoutUrl` for the human to pay in their own browser,
+  and `use_saved_method` is not offered. Hand the link over and stop.
+- **Payment is a human decision** (other MCP clients): before the first
+  `create_order` of a session, call `list_payment_methods`. If one is saved,
+  ask the human:
   charge it (default — the order completes by itself, no browser), or pay
   with something new (pass `use_saved_method: false` and `create_order`
   returns `checkoutUrl`). Either way give the human the outcome and stop;
