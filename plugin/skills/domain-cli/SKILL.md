@@ -67,16 +67,27 @@ exits immediately with `missing required flag(s): …` — it never hangs.
 - **Signup** is two-step (the emailed 6-digit code must be typed by the
   human — **the agent must NOT automate mailbox access or guess the code**):
   `domain-cli signup --email user@example.com` (sends the code), then pass
-  the code the human typed through a private temporary file, never as
-  `--code` (process arguments are readable by other local users):
-  ```sh
-  umask 077; CODE_FILE=$(mktemp "${TMPDIR:-/tmp}/domain-cli-code.XXXXXX")
-  printf '%s\n' "123456" > "$CODE_FILE"   # the 6 digits the human gave you
-  domain-cli signup --email user@example.com --code-file "$CODE_FILE"
-  rm -f "$CODE_FILE"
-  ```
+  the code the human typed through a private file with `--code-file`, never
+  as `--code` (process arguments are readable by other local users):
+  1. Create the file: `umask 077; mktemp "${TMPDIR:-/tmp}/domain-cli-code.XXXXXX"`
+     (prints its path).
+  2. Write the 6 digits into that path with your file-writing tool (for
+     example Claude Code's Write tool), not with a shell command, so the code
+     never appears in a command line.
+  3. Verify and clean up, keeping the verification's exit status:
+     ```sh
+     f=/path/printed/in/step/1
+     domain-cli signup --email user@example.com --code-file "$f"; s=$?; rm -f "$f"; exit $s
+     ```
+  If you only have a shell, `printf '%s\n' 123456 > "$f"` works but puts the
+  code in that shell's arguments for a moment. The code is single-use and
+  expires in 10 minutes, so do that only on a single-user machine;
+  otherwise use the MCP connector's browser sign-in. Do not pass `--json` to
+  this verification step: its JSON output contains the new token, which is
+  already saved privately in the config.
 - **Signing in again** is `domain-cli login`, the identical two-step flow
-  (`--email`, then `--email` + `--code-file`, as above). It saves the sign-in as a switchable
+  (`--email`, then `--email` + `--code-file`, exactly as above, without
+  `--json`). It saves the sign-in as a switchable
   account: `domain-cli account list` shows the saved sign-ins and
   `domain-cli account switch <email>` moves between them without another code.
 - **Signing out** is `domain-cli logout`: it revokes this machine's token on
@@ -102,7 +113,13 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   pay with the saved one (instant, no browser — run the order normally), or
   pay with a different one (`--new-payment-method` opens the hosted checkout,
   which also saves the new method for next time). If none is listed, just
-  proceed. Never silently charge a saved method without the human having
+  proceed. **If you are Claude** (claude.ai, the Claude apps or Claude Code,
+  including through the RegisterDomainCLI plugin), never charge a saved
+  method: always pass `--new-payment-method`, so every purchase ends at a
+  checkout link the human pays in their browser — the same rule the MCP
+  connector enforces for Claude. Get the exact total right before ordering
+  with `--dry-run --json` (the quote's `totalCents`), have the human approve
+  it, and place the order straight away. Never silently charge a saved method without the human having
   agreed in this conversation; methods are removed in the web panel, not from
   the CLI.
 - **Editing an order is cancel + recreate**: an unpaid order can be dropped
@@ -136,17 +153,18 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   EU pay no VAT. Never promise an exemption — the quote shows the result.
   Quotes carry `netCents`/`taxCents`/`totalCents`: always confirm the
   `totalCents` figure with the human before `--yes`.
-- **JSON output**: the global `--json` flag prints the API response object
-  instead of the human table for most commands — prefer it for parsing.
-  Exceptions in the current release: `search`, `domains` and `dns list`
-  ignore `--json` and always print a table; `billing show` prints plain text
-  when no profile is saved and otherwise the JSON object followed by the
-  text fields, and `billing set` prints the JSON object followed by a
-  confirmation line. For structured results from those, use the read-only
-  API calls below (`/v1/domains/search`, `/v1/domains`,
-  `/v1/domains/<domain>/records`, `/v1/billing`) or the matching MCP tools
-  (`search_domains`, `list_domains`, `list_records`, `get_billing`); for
-  `billing show/set` you can also parse only the first JSON object.
+- **JSON output**: in the current release the global `--json` flag yields
+  exactly one JSON object only for: `whoami`, `tlds`, `orders` (listing),
+  `payment-methods`, `domains contacts <domain>`, the `account` subcommands,
+  `logout`, the code-request step of `signup`/`login`, and
+  `register`/`renew`/`transfer` with `--dry-run` (the quote) or with
+  `--no-wait` and no `--save-contact` (the order). Every other command
+  ignores `--json` or mixes JSON with text, so treat its output as
+  human-readable and do not re-run a mutation because its output did not
+  parse — check the result with a read instead. For structured reads use the
+  read-only API calls below (`/v1/domains/search`, `/v1/domains`,
+  `/v1/domains/<domain>/records`, `/v1/billing`, …) or the matching MCP
+  tools.
 - **Currency**: pass the global `--currency <code>` (or `DOMAIN_CLI_CURRENCY`)
   so every price — search rows, quotes, orders — is shown and billed in the
   user's currency. Pick the currency from the user's locale/location when they
@@ -244,7 +262,7 @@ production).
 | `domain-cli tlds [--group <slug>]` | List every sellable TLD with its curated intent groups (`local`, `business`, `tech`, `shop`, `creative`, `org`). `--group` filters the list. Use it to translate "domains in the user's region" into an exact `--tlds` set. |
 | `domain-cli register <domain...> [--years N] [--own-contact \| --contact <label>] [--role-admin <spec>] [--role-tech <spec>] [--role-billing <spec>] [--new-payment-method] [--dry-run]` | Quote → confirm → order → checkout in the human's browser → polls until paid/failed. With a saved payment method and no `--new-payment-method` the order is charged instantly (empty `checkoutUrl`, no browser). With SEVERAL domains they go into ONE order (one payment, one invoice with a line per domain). Prompts for registrant when no default contact set exists; offers to save it. |
 | `domain-cli renew <domain> [--years N] [--new-payment-method]` | Same flow with `kind=renewal`. |
-| `domain-cli transfer <domain> --auth-code <code> [--contact <label>] [--own-contact] [--new-payment-method]` | Same flow with `kind=transfer`. Transfers take up to 7 days; watch `domain-cli orders`. |
+| `domain-cli transfer <domain> --auth-code <code> [--contact <label>] [--own-contact] [--new-payment-method]` | Same flow with `kind=transfer`. Transfers take up to 7 days; watch `domain-cli orders`. `--auth-code` is a process argument other local users can read while the command runs: on a shared machine place the transfer through the MCP `create_order` tool (`kind=transfer`) or the web panel instead. |
 | `domain-cli orders [--cancel <id>]` | List orders (status, invoice number, checkout URL) or cancel an open order. |
 | `domain-cli invoice <orderId>` | Opens the order's pre-signed invoice URL in the browser and prints it. |
 | `domain-cli contacts add <label> \| list \| show <label> \| default <label> \| remove <label>` | Manage saved registrant contact sets. `add` accepts the same `--role-*` flags; `show` prints the per-role summary. |
@@ -259,7 +277,7 @@ production).
 | `domain-cli dns set <domain> <TYPE> <host> <answer> [--ttl 3600]` | Create a DNS record. |
 | `domain-cli dns delete <domain> <recordID>` | Delete a DNS record by numeric id. |
 | `domain-cli dns ns get <domain>` / `ns set <domain> <ns1> <ns2> [...]` | Show/replace nameservers. |
-| `domain-cli login [--email <addr>] [--code <6 digits>]` | Same two-step flow as `signup`; saves the sign-in as a switchable account. |
+| `domain-cli login [--email <addr>] [--code-file <path>]` | Same two-step flow as `signup` (code through a private file, never `--code`; no `--json` on the verification step); saves the sign-in as a switchable account. |
 | `domain-cli logout` | Revoke this machine's stored token and forget the sign-in. |
 | `domain-cli account list \| switch <email> \| remove <email> \| delete` | List saved sign-ins, switch between them, revoke-and-forget one, or delete the account entirely. |
 
