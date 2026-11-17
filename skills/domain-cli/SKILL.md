@@ -66,10 +66,17 @@ exits immediately with `missing required flag(s): …` — it never hangs.
 
 - **Signup** is two-step (the emailed 6-digit code must be typed by the
   human — **the agent must NOT automate mailbox access or guess the code**):
-  `domain-cli signup --email user@example.com` (sends the code), then
-  `domain-cli signup --email user@example.com --code 123456` (saves the token).
+  `domain-cli signup --email user@example.com` (sends the code), then pass
+  the code the human typed through a private temporary file, never as
+  `--code` (process arguments are readable by other local users):
+  ```sh
+  umask 077; CODE_FILE=$(mktemp "${TMPDIR:-/tmp}/domain-cli-code.XXXXXX")
+  printf '%s\n' "123456" > "$CODE_FILE"   # the 6 digits the human gave you
+  domain-cli signup --email user@example.com --code-file "$CODE_FILE"
+  rm -f "$CODE_FILE"
+  ```
 - **Signing in again** is `domain-cli login`, the identical two-step flow
-  (`--email`, then `--email` + `--code`). It saves the sign-in as a switchable
+  (`--email`, then `--email` + `--code-file`, as above). It saves the sign-in as a switchable
   account: `domain-cli account list` shows the saved sign-ins and
   `domain-cli account switch <email>` moves between them without another code.
 - **Signing out** is `domain-cli logout`: it revokes this machine's token on
@@ -79,7 +86,12 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   access, and they never delete anything on the server.
 - **Ordering requires explicit human approval**: pass the global `--yes` only
   after the human confirmed the quoted price. Without it the command fails by
-  design. `--no-wait` returns right after order creation. An order normally
+  design. **Always pass `--no-wait` when you place an order**: without it the
+  CLI keeps polling for up to 15 minutes (and appends status lines after the
+  `--json` object), so you could not hand the checkout link to the human
+  until it gives up. With `--no-wait` it prints the order (id +
+  `checkoutUrl`) and exits; follow up with `domain-cli orders` or the
+  `get_order` MCP tool. An order normally
   answers with a `checkoutUrl` the human completes in the browser; an order
   answered with an **empty `checkoutUrl`** means the saved payment method is
   being charged off-session — the order completes by itself through the
@@ -125,15 +137,25 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   Quotes carry `netCents`/`taxCents`/`totalCents`: always confirm the
   `totalCents` figure with the human before `--yes`.
 - **JSON output**: the global `--json` flag prints the API response object
-  instead of the human table — prefer it for parsing.
+  instead of the human table for most commands — prefer it for parsing.
+  Exceptions in the current release: `search`, `domains` and `dns list`
+  ignore `--json` and always print a table; `billing show` prints plain text
+  when no profile is saved and otherwise the JSON object followed by the
+  text fields, and `billing set` prints the JSON object followed by a
+  confirmation line. For structured results from those, use the read-only
+  API calls below (`/v1/domains/search`, `/v1/domains`,
+  `/v1/domains/<domain>/records`, `/v1/billing`) or the matching MCP tools
+  (`search_domains`, `list_domains`, `list_records`, `get_billing`); for
+  `billing show/set` you can also parse only the first JSON object.
 - **Currency**: pass the global `--currency <code>` (or `DOMAIN_CLI_CURRENCY`)
   so every price — search rows, quotes, orders — is shown and billed in the
   user's currency. Pick the currency from the user's locale/location when they
   have not named one (`eur` for the euro area, `usd` for the United States,
   …). Unsupported codes fail with an explicit server error; search results and
   quotes always carry a `currency` field, so never assume one. Prices in
-  search output are indicative; the exact charge is the quote's `netCents`
-  in the quote's own `currency`.
+  search output are indicative; the exact charge is the quote's
+  `totalCents` (VAT included; `netCents` is before tax) in the quote's own
+  `currency`.
 - **First run**: pass `--server <url>` or set `DOMAIN_CLI_SERVER_URL`;
   without a TTY the CLI refuses to guess a server.
 - **The server must be https** (plain http is accepted only for localhost).
@@ -354,10 +376,13 @@ curl -sS "$BASE/v1/quote?domain=example.com&years=1&kind=registration" -H @"$HDR
 
 # List DNS records
 curl -sS "$BASE/v1/domains/example.com/records" -H @"$HDR"
-
-# Sign out — revokes exactly this token, leaving other machines signed in
-curl -sS -X POST "$BASE/v1/auth/logout" -H @"$HDR"
 ```
+
+Signing out is NOT part of that read-only script: use `domain-cli logout`,
+only when the human asks to sign out. It revokes this machine's token on the
+server AND clears it from the config; a raw `POST /v1/auth/logout` would
+revoke the token but leave it in the config, breaking every later CLI
+command until the next `login`.
 
 Prefer the CLI for interactive flows (signup, orders, anything with
 prompts); the API is fine for read-only checks.
