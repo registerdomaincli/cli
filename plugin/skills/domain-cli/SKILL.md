@@ -119,7 +119,9 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   checkout link the human pays in their browser — the same rule the MCP
   connector enforces for Claude. Get the exact total right before ordering
   with `--dry-run --json` (the quote's `totalCents`), have the human approve
-  it, and place the order straight away. Never silently charge a saved method without the human having
+  it, and place the order straight away. For a **transfer**, `--dry-run`
+  still requires `--auth-code`, so quote it without the code instead: the MCP
+  `quote` tool or `GET /v1/quote?domain=…&kind=transfer` (see the API section). Never silently charge a saved method without the human having
   agreed in this conversation; methods are removed in the web panel, not from
   the CLI.
 - **Editing an order is cancel + recreate**: an unpaid order can be dropped
