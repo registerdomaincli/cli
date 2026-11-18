@@ -57,18 +57,23 @@ FETCH_OK=0
 # "Authorization: …"` line in ~/.curlrc, or credentials in ~/.wgetrc or
 # ~/.netrc, would otherwise ride along. curl skips ~/.curlrc only when -q is
 # its FIRST argument (and reads ~/.netrc only with -n, which is never
-# passed). GNU wget gets --no-config where it has it (1.17+) and netrc=off;
-# BusyBox wget reads neither file and rejects those options, so it gets none.
+# passed). GNU wget gets --no-config and netrc=off, and one too old to have
+# --no-config (before 1.17) is refused; BusyBox wget reads neither file and
+# rejects those options, so it gets none.
 if command -v curl >/dev/null 2>&1; then
 	curl -q -fsSL "$BASE/$ASSET" -o "$TMP/domain-cli" &&
 		curl -q -fsSL "$BASE/$ASSET.sha256" -o "$TMP/$ASSET.sha256" && FETCH_OK=1
 elif command -v wget >/dev/null 2>&1; then
 	set --
 	if wget --version 2>/dev/null | grep -q "GNU Wget"; then
-		if wget --help 2>/dev/null | grep -q -- "--no-config"; then
-			set -- --no-config
+		# Fail closed: a GNU wget that cannot skip ~/.wgetrc (older than
+		# 1.17) could send whatever credentials or headers it configures.
+		if ! wget --help 2>/dev/null | grep -q -- "--no-config"; then
+			echo "error: this wget cannot ignore ~/.wgetrc (needs GNU Wget 1.17+)." >&2
+			echo "Install curl, or a newer wget, and re-run." >&2
+			exit 1
 		fi
-		set -- "$@" -e netrc=off
+		set -- --no-config -e netrc=off
 	fi
 	wget "$@" -q "$BASE/$ASSET" -O "$TMP/domain-cli" &&
 		wget "$@" -q "$BASE/$ASSET.sha256" -O "$TMP/$ASSET.sha256" && FETCH_OK=1
