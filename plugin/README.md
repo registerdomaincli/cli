@@ -11,7 +11,8 @@ domain registrar built for AI agents, and teaches Claude how to use it well.
   Claude uses it, a browser window opens and you sign in with your email and
   the 6-digit code we email you. The account is created on first sign-in and
   is the same one the CLI and the web panel use.
-- **Skill** (`skills/domain-cli/SKILL.md`): instructions for Claude on searching
+- **Skill** (`skills/domain-cli/SKILL.md`, plus its bundled installer
+  `scripts/install.sh`): instructions for Claude on searching
   and quoting domains, placing registration, renewal and transfer orders,
   managing DNS records, nameservers, contacts, transfer lock and auto-renew,
   and which actions always need your explicit approval.
@@ -25,11 +26,15 @@ domain registrar built for AI agents, and teaches Claude how to use it well.
   authenticated with the OAuth token from your sign-in. Your conversation is
   not sent.
 - When the session has a shell and you agree, the skill may ask Claude to
-  install the open-source `domain-cli` binary from this repository's GitHub
-  releases with `curl -fsSL https://registerdomaincli.com/install.sh | sh`
-  (a single binary in `~/.local/bin`, no root). Claude asks you before
+  install the open-source `domain-cli` binary by running the installer
+  bundled in this plugin (`skills/domain-cli/scripts/install.sh`, the same
+  script as `install.sh` at the root of this repository). It downloads the
+  latest release binary from this repository's GitHub releases, verifies its
+  SHA-256 and puts it in `~/.local/bin` (no root). Claude asks you before
   running it, and with the connector available it can do everything without
   installing anything.
+- The plugin never reads credentials from your machine: the connector signs
+  in through OAuth in your browser, and the CLI keeps its own session.
 
 ## Payments and safety
 

@@ -23,14 +23,17 @@ jobs:
 
   plugin:
     # plugin/ is the Claude directory plugin bundle. Everything a plugin
-    # loads must live inside its folder (no symlinks), so the skill is a
-    # copy of skills/domain-cli/SKILL.md — this keeps the two identical.
+    # loads must live inside its folder (no symlinks), so its skill,
+    # install.sh and LICENSE are generated from the canonical files by
+    # tools/pluginbundle — this fails when they are stale.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
       - run: |
-          cmp skills/domain-cli/SKILL.md plugin/skills/domain-cli/SKILL.md || {
-            echo "::error::plugin/skills/domain-cli/SKILL.md differs from skills/domain-cli/SKILL.md; run: cp skills/domain-cli/SKILL.md plugin/skills/domain-cli/SKILL.md"
+          go run ./tools/pluginbundle -check || {
+            echo "::error::plugin/ is stale (skill, install.sh or LICENSE); run: go run ./tools/pluginbundle"
             exit 1
           }
-          cmp LICENSE plugin/LICENSE

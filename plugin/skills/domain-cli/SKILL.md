@@ -47,7 +47,10 @@ example.com at my server", "renew it for two years" — and you do the rest.
 Ask the human once ("Can I install domain-cli? It is a single binary in
 ~/.local/bin, no root needed"), then run the command yourself:
 
-- Linux/macOS: `curl -fsSL https://registerdomaincli.com/install.sh | sh`
+- Linux/macOS: `sh "${CLAUDE_SKILL_DIR}/scripts/install.sh"`, the
+  installer bundled with this skill (the same script registerdomaincli.com
+  serves). It downloads the release binary from GitHub and verifies its
+  SHA-256 before installing it.
 - Windows (PowerShell): download `domain-cli-windows-amd64.exe` from the
   [latest release](https://github.com/registerdomaincli/cli/releases/latest),
   unblock it, and add it to `PATH` (the landing page lists the same steps).
@@ -123,9 +126,7 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   it, and place the order straight away. For a **transfer**, `--dry-run`
   still requires `--auth-code`, so quote it without the code instead: the
   MCP `quote` tool (`kind=transfer`, `years=1`, `currency`,
-  `discount_code`) or
-  `GET /v1/quote?domain=…&years=1&kind=transfer&currency=<code>&discount=<code>`
-  (see the API section). Pin the currency explicitly on BOTH sides — the
+  `discount_code`). Pin the currency explicitly on BOTH sides — the
   same `currency` on the quote and `--currency <code>` on the transfer —
   because the CLI can otherwise take one from `DOMAIN_CLI_CURRENCY` or its
   config while the quote defaults to the server's; pass the same discount
@@ -172,9 +173,8 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   ignores `--json` or mixes JSON with text, so treat its output as
   human-readable and do not re-run a mutation because its output did not
   parse — check the result with a read instead. For structured reads use the
-  read-only API calls below (`/v1/domains/search`, `/v1/domains`,
-  `/v1/domains/<domain>/records`, `/v1/billing`, …) or the matching MCP
-  tools.
+  read-only tools of the MCP connector bundled with this plugin
+  (`search_domains`, `list_domains`, `list_records`, `get_billing`, …).
 - **Currency**: pass the global `--currency <code>` (or `DOMAIN_CLI_CURRENCY`)
   so every price — search rows, quotes, orders — is shown and billed in the
   user's currency. Pick the currency from the user's locale/location when they
@@ -324,97 +324,14 @@ instruction naming the domain.
 
 ## Direct API access
 
-The CLI talks to the same API an agent can call with `curl`. All endpoints
-are under `/v1`. `auth/signup`, `auth/verify`, `healthz` and `readyz` are
-public; everything else needs `Authorization: Bearer dcl_...` (the token
-saved by `signup`).
+Use the MCP connector bundled with this plugin, or the CLI: between them
+they cover the whole API. Never read the CLI's saved token (its
+`config.json`) or any other credential from the user's machine to call
+the API yourself; the connector signs in through OAuth in the human's
+browser, and the CLI uses its own saved session.
 
-**Do not hardcode the base URL.** The token in the config file belongs to
-the server recorded next to it, and the CLI refuses to send one anywhere
-else (`tokenBelongsToServer`). A snippet that reads the token but points at
-a fixed host does the very thing that guard exists to prevent: a session
-saved against a staging or self-hosted server would hand that server's
-credential to production. Read `server_url` from the same file.
-
-The token lives at `os.UserConfigDir()/domain-cli/config.json`, which is
-`$XDG_CONFIG_HOME` or `~/.config` on Linux, `~/Library/Application Support`
-on macOS, and `%AppData%` on Windows — do not hardcode one of them.
-
-The same rule as `--token-file` applies here: a token expanded into `-H
-"Authorization: Bearer $TOKEN"` becomes one of curl's process arguments, and
-`/proc/<pid>/cmdline` is world-readable, so any other local user can read it
-out of the process table while the request runs. Write the header to a file
-once and let curl read it with `-H @`. Run this as a script, not pasted into
-an interactive shell: `set -e` is what stops a missing or unreadable config
-from being followed by four unauthenticated requests.
-
-```sh
-set -e
-# The token goes straight from the config file into the header file: it is
-# never a process argument, and umask keeps the header file private. BASE
-# comes out of that same file, never hardcoded — see the warning above.
-umask 077
-# The template is not decoration: BSD/macOS mktemp does not accept a bare
-# `mktemp` on every release the install section supports.
-HDR=$(mktemp "${TMPDIR:-/tmp}/domain-cli-hdr.XXXXXX")
-trap 'rm -f "$HDR"' EXIT
-BASE=$(python3 - "$HDR" <<'PY'
-import json, os, sys
-from urllib.parse import urlparse
-# Mirrors the CLI's os.UserConfigDir(), so this works from a POSIX shell on
-# Windows too: %AppData% there, Application Support on macOS (which ignores
-# XDG_CONFIG_HOME), and XDG_CONFIG_HOME or ~/.config everywhere else.
-if sys.platform == "win32":
-    base = os.environ["APPDATA"]
-elif sys.platform == "darwin":
-    base = os.path.expanduser("~/Library/Application Support")
-else:
-    base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
-cfg = json.load(open(os.path.join(base, "domain-cli", "config.json")))
-token, server = cfg.get("token"), cfg.get("server_url")
-# `logout` leaves "token": "" behind rather than dropping the key, so an
-# empty string is the ordinary signed-out state, not a corrupt file. Without
-# this check it would go out as an empty bearer and come back 401.
-if not isinstance(token, str) or not token:
-    raise SystemExit("signed out: run `domain-cli login --email you@example.com`")
-server = server.rstrip("/") if isinstance(server, str) else ""
-# The token is bound to the server that issued it, so the base URL is read
-# from the config rather than hardcoded. These are validExternalURL's checks
-# in full: userinfo rejected outright, https needs a host, http only for
-# loopback.
-u = urlparse(server)
-if u.username is not None or u.password is not None or not (
-    (u.scheme == "https" and u.hostname)
-    or (u.scheme == "http" and u.hostname in ("localhost", "127.0.0.1", "::1"))):
-    raise SystemExit("config has no usable server_url: %r" % server)
-open(sys.argv[1], "w").write("Authorization: Bearer " + token + "\n")
-print(server)
-PY
-)
-
-# Search — optionally restricted to TLDs and capped
-curl -sS -X POST "$BASE/v1/domains/search" \
-  -H @"$HDR" -H "Content-Type: application/json" \
-  -d '{"query":"example","tlds":["com","net","org"],"limit":50}'
-
-# TLD catalog: curated groups + sellable TLDs (?group=<slug> filters)
-curl -sS "$BASE/v1/tlds" -H @"$HDR"
-
-# Quote (exact pre-order price; years ignored for transfers)
-curl -sS "$BASE/v1/quote?domain=example.com&years=1&kind=registration" -H @"$HDR"
-
-# List DNS records
-curl -sS "$BASE/v1/domains/example.com/records" -H @"$HDR"
-```
-
-Signing out is NOT part of that read-only script: use `domain-cli logout`,
-only when the human asks to sign out. It revokes this machine's token on the
-server AND clears it from the config; a raw `POST /v1/auth/logout` would
-revoke the token but leave it in the config, breaking every later CLI
-command until the next `login`.
-
-Prefer the CLI for interactive flows (signup, orders, anything with
-prompts); the API is fine for read-only checks.
+Signing out is `domain-cli logout`, only when the human asks: it revokes
+this machine's token on the server and clears it from the config.
 
 ## Errors and rate limits
 
