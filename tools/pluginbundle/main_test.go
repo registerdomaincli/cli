@@ -29,14 +29,19 @@ func TestPluginSkillFromRepo(t *testing.T) {
 	}
 	// Every curl call must start with -q, or curl loads ~/.curlrc (which can
 	// carry an Authorization header) despite the anonymous-only promise.
+	calls := 0
 	for i, line := range strings.Split(install, "\n") {
 		code := strings.TrimSpace(line)
-		if strings.HasPrefix(code, "#") || !strings.Contains(code, "curl ") || strings.Contains(code, "command -v curl") {
+		if !strings.HasPrefix(code, "curl ") { // a curl invocation, not a mention
 			continue
 		}
-		if !strings.Contains(code, "curl -q ") {
+		calls++
+		if !strings.HasPrefix(code, "curl -q ") {
 			t.Errorf("install.sh line %d runs curl without -q first: %s", i+1, code)
 		}
+	}
+	if calls == 0 {
+		t.Error("found no curl invocation in install.sh; the -q check checked nothing")
 	}
 	for _, want := range []string{"${CLAUDE_SKILL_DIR}/scripts/install.sh", "## Errors and rate limits"} {
 		if !strings.Contains(skill, want) {
