@@ -19,8 +19,9 @@ example.com at my server", "renew it for two years" — and you do the rest.
   commands for the human to type. Show or explain a command only when they
   ask how it works or say they want to run it themselves.
 - **Missing pieces are your job too.** No `domain-cli` on the machine →
-  install it (see **Install**), telling the human first. No account → run
-  `signup` and ask them only for the emailed 6-digit code. No contact set or
+  use the MCP connector bundled with this plugin (see **Install**). No
+  account → the connector's sign-in creates it; the human only types the
+  emailed 6-digit code. No contact set or
   billing profile → ask for the data in plain language and save it.
 - **Turn intent into steps.** "Something short for my bakery" → search
   sensible keywords and TLDs (`domain-cli tlds --group …`), shortlist a few
@@ -31,37 +32,25 @@ example.com at my server", "renew it for two years" — and you do the rest.
   browser, and confirm the guarded actions described below (unlock/auth
   code, nameserver changes, record deletion, contact changes, autorenew on).
   Everything else you do without asking them to touch a terminal.
-- **Have a shell? Use the CLI, and install it yourself.** That is why
-  RegisterDomainCLI ships a CLI and not only an MCP server: installing
-  `domain-cli` is one command you can run on your own once the human says
-  yes, with no configuration and no restart. Adding an MCP server usually
-  has to be done by hand by the human, and even when you can edit the
-  config yourself the harness normally needs a restart before the tools
-  show up. So never send a human with a shell off to set up the MCP
-  connector. Install the CLI instead. (If the connector is already
-  connected in this session, using it is fine.)
+- **Use the connector bundled with this plugin.** It is already
+  configured, and its tools cover search, quotes, orders, DNS,
+  nameservers, contacts and billing. If `domain-cli` is already
+  installed and signed in you may use it as well, but never install
+  software from this plugin.
 - **No shell?** Same rule, through the hosted MCP server tools.
 
 ## Install
 
-Ask the human once ("Can I install domain-cli? It is a single binary in
-~/.local/bin, no root needed"), then run the command yourself:
+Nothing to install: this plugin's MCP connector is the way in, and its
+tools cover every operation. The first tool call opens a browser
+window where the human signs in with their email and the emailed
+6-digit code; that also creates the account.
 
-- Linux/macOS: `sh "${CLAUDE_SKILL_DIR}/scripts/install.sh"`, the
-  installer bundled with this skill (the same script registerdomaincli.com
-  serves). It downloads the release binary from GitHub and verifies its
-  SHA-256 before installing it.
-- Windows (PowerShell): download `domain-cli-windows-amd64.exe` from the
-  [latest release](https://github.com/registerdomaincli/cli/releases/latest),
-  unblock it, and add it to `PATH` (the landing page lists the same steps).
-- Fallback with Go toolchain: `go install github.com/registerdomaincli/cli/cmd/domain-cli@latest`
-- **Android (Termux)**: the static `linux/arm64` release binary runs as-is
-  inside Termux (`pkg install curl`, then the install command above, with
-  `~/.local/bin` on `PATH` for the fallback). No root needed. **iOS has no
-  local execution option** — there is no terminal app that can run the
-  binary; on phones without a real shell, use the hosted MCP server instead
-  of `install.sh` (the web panel manages billing, contacts and payment
-  methods, but cannot place orders).
+The `domain-cli` CLI is optional. Do not download or run an installer
+yourself from this plugin. If the human wants the CLI, point them to
+https://registerdomaincli.com for the install steps (Linux, macOS,
+Windows) and use it once they have installed it. Everything below that
+describes `domain-cli` applies when it is installed.
 
 ## Agent contract (non-interactive use)
 
@@ -197,8 +186,8 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   stale — `domain-cli --version`, once per session (not on every message),
   and only re-check after the user installs something or a day has passed.
   A release newer than the printed `vX.Y.Z` means the install is behind:
-  run the install command from **Install** again (it is idempotent), or
-  `go install …@latest` for source installs. Do not silently continue on a
+  tell the human, who can update it with the steps on
+  https://registerdomaincli.com (or use the connector meanwhile). Do not silently continue on a
   stale binary when the task touches billing or DNS mutations; tell the
   user and proceed only on their word. `dev`/non-`v*` versions have no
   release line — skip the check.
@@ -207,9 +196,8 @@ exits immediately with `missing required flag(s): …` — it never hangs.
 
 Mobile agent apps (Claude, Gemini) and other environments without a real
 terminal cannot run `domain-cli`. Talk to the hosted MCP server instead —
-same account, same dcl_ token, same API. This path is for agents WITHOUT a
-shell: with a shell, install the CLI (see above) rather than asking the
-human to configure a connector and restart.
+same account, same dcl_ token, same API. This plugin bundles it already
+configured, so use it whether or not there is a shell.
 
 - **Endpoint**: `https://registerdomaincli.com/v1/mcp` (MCP over streamable
   HTTP, JSON-RPC; protocol version 2025-06-18).
