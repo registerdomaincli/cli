@@ -64,11 +64,12 @@ if command -v curl >/dev/null 2>&1; then
 	curl -q -fsSL "$BASE/$ASSET" -o "$TMP/domain-cli" &&
 		curl -q -fsSL "$BASE/$ASSET.sha256" -o "$TMP/$ASSET.sha256" && FETCH_OK=1
 elif command -v wget >/dev/null 2>&1; then
-	# The probes themselves must not load ~/.wgetrc either: the first one
-	# passes --no-config (only a GNU Wget that supports it prints its banner),
-	# and the fallback probe points WGETRC at /dev/null.
+	# The probes themselves must not load ~/.wgetrc either. Both point WGETRC
+	# at /dev/null (an old GNU Wget reads its rc file before rejecting an
+	# unknown --no-config), and only a GNU Wget that supports --no-config
+	# prints its banner on the first one.
 	set --
-	if wget --no-config --version 2>/dev/null | grep -q "GNU Wget"; then
+	if WGETRC=/dev/null wget --no-config --version 2>/dev/null | grep -q "GNU Wget"; then
 		set -- --no-config -e netrc=off
 	elif WGETRC=/dev/null wget --version 2>/dev/null | grep -q "GNU Wget"; then
 		# Fail closed: a GNU wget that cannot skip ~/.wgetrc (older than
