@@ -22,9 +22,20 @@ func TestPluginSkillFromRepo(t *testing.T) {
 	// The bundled installer must download anonymously: no GitHub token, no
 	// `gh` login, no Authorization header.
 	install := string(outs[1].data)
-	for _, banned := range []string{"gh auth token", "GH_TOKEN", "GITHUB_TOKEN", "Authorization"} {
+	for _, banned := range []string{"gh auth token", "GH_TOKEN", "GITHUB_TOKEN", "-H \"Authorization", "--header"} {
 		if strings.Contains(install, banned) {
 			t.Errorf("bundled install.sh still contains %q", banned)
+		}
+	}
+	// Every curl call must start with -q, or curl loads ~/.curlrc (which can
+	// carry an Authorization header) despite the anonymous-only promise.
+	for i, line := range strings.Split(install, "\n") {
+		code := strings.TrimSpace(line)
+		if strings.HasPrefix(code, "#") || !strings.Contains(code, "curl ") || strings.Contains(code, "command -v curl") {
+			continue
+		}
+		if !strings.Contains(code, "curl -q ") {
+			t.Errorf("install.sh line %d runs curl without -q first: %s", i+1, code)
 		}
 	}
 	for _, want := range []string{"${CLAUDE_SKILL_DIR}/scripts/install.sh", "## Errors and rate limits"} {

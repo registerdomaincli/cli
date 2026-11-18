@@ -53,12 +53,25 @@ echo "Downloading $ASSET from $REPO latest release..."
 
 BASE="https://github.com/$REPO/releases/latest/download"
 FETCH_OK=0
+# Anonymous means not even the user's own downloader config: a `header =
+# "Authorization: …"` line in ~/.curlrc, or credentials in ~/.wgetrc or
+# ~/.netrc, would otherwise ride along. curl skips ~/.curlrc only when -q is
+# its FIRST argument (and reads ~/.netrc only with -n, which is never
+# passed). GNU wget gets --no-config where it has it (1.17+) and netrc=off;
+# BusyBox wget reads neither file and rejects those options, so it gets none.
 if command -v curl >/dev/null 2>&1; then
-	curl -fsSL "$BASE/$ASSET" -o "$TMP/domain-cli" &&
-		curl -fsSL "$BASE/$ASSET.sha256" -o "$TMP/$ASSET.sha256" && FETCH_OK=1
+	curl -q -fsSL "$BASE/$ASSET" -o "$TMP/domain-cli" &&
+		curl -q -fsSL "$BASE/$ASSET.sha256" -o "$TMP/$ASSET.sha256" && FETCH_OK=1
 elif command -v wget >/dev/null 2>&1; then
-	wget -q "$BASE/$ASSET" -O "$TMP/domain-cli" &&
-		wget -q "$BASE/$ASSET.sha256" -O "$TMP/$ASSET.sha256" && FETCH_OK=1
+	set --
+	if wget --version 2>/dev/null | grep -q "GNU Wget"; then
+		if wget --help 2>/dev/null | grep -q -- "--no-config"; then
+			set -- --no-config
+		fi
+		set -- "$@" -e netrc=off
+	fi
+	wget "$@" -q "$BASE/$ASSET" -O "$TMP/domain-cli" &&
+		wget "$@" -q "$BASE/$ASSET.sha256" -O "$TMP/$ASSET.sha256" && FETCH_OK=1
 else
 	echo "error: need curl or wget to download the release." >&2
 	exit 1
