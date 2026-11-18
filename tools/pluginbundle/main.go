@@ -21,8 +21,10 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -195,11 +197,23 @@ func main() {
 		want[filepath.Clean(o.path)] = true
 	}
 	skillsDir := filepath.Join(*root, "plugin", "skills")
-	_ = filepath.WalkDir(skillsDir, func(p string, d os.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
+	walkErr := filepath.WalkDir(skillsDir, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			// A missing plugin/skills is fine (first generation; -check then
+			// reports the missing SKILL.md). Anything else must not be
+			// skipped: an unreadable directory could hide a script.
+			if p == skillsDir && errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
+			return err
+		}
+		if d.IsDir() {
 			return nil
 		}
-		rel, _ := filepath.Rel(*root, p)
+		rel, err := filepath.Rel(*root, p)
+		if err != nil {
+			return err
+		}
 		if want[filepath.Clean(rel)] {
 			return nil
 		}
@@ -210,8 +224,15 @@ func main() {
 		}
 		return os.Remove(p)
 	})
+	if walkErr != nil {
+		fmt.Fprintln(os.Stderr, "pluginbundle:", walkErr)
+		os.Exit(1)
+	}
 	if !*check {
-		removeEmptyDirs(skillsDir)
+		if err := removeEmptyDirs(skillsDir); err != nil {
+			fmt.Fprintln(os.Stderr, "pluginbundle:", err)
+			os.Exit(1)
+		}
 	}
 	for _, o := range outs {
 		p := filepath.Join(*root, o.path)
@@ -246,16 +267,36 @@ func main() {
 	}
 }
 
-// removeEmptyDirs deletes directories under root left empty by the cleanup.
-func removeEmptyDirs(root string) {
+// removeEmptyDirs deletes the directories under root that the cleanup left
+// empty. A directory that still has files is kept; any other error is
+// returned.
+func removeEmptyDirs(root string) error {
 	var dirs []string
-	_ = filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
-		if err == nil && d.IsDir() && p != root {
+	err := filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			if p == root && errors.Is(err, fs.ErrNotExist) {
+				return nil
+			}
+			return err
+		}
+		if d.IsDir() && p != root {
 			dirs = append(dirs, p)
 		}
 		return nil
 	})
-	for i := len(dirs) - 1; i >= 0; i-- {
-		_ = os.Remove(dirs[i]) // fails, harmlessly, when not empty
+	if err != nil {
+		return err
 	}
+	for i := len(dirs) - 1; i >= 0; i-- {
+		entries, err := os.ReadDir(dirs[i])
+		if err != nil {
+			return err
+		}
+		if len(entries) == 0 {
+			if err := os.Remove(dirs[i]); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

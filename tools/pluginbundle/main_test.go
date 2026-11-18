@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -39,5 +40,30 @@ func TestPluginSkillFromRepo(t *testing.T) {
 func TestEditsFailLoudly(t *testing.T) {
 	if _, err := pluginSkill("no matching text"); err == nil {
 		t.Fatal("expected an error when an edit no longer matches")
+	}
+}
+
+// A stray file under plugin/skills (e.g. an old bundled script) is removed
+// on generation, and generation fails rather than skip what it cannot read.
+func TestStrayFilesRemoved(t *testing.T) {
+	dir := t.TempDir()
+	stray := dir + "/plugin/skills/domain-cli/scripts/install.sh"
+	if err := os.MkdirAll(dir+"/plugin/skills/domain-cli/scripts", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(stray, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(stray); err != nil {
+		t.Fatal(err)
+	}
+	if err := removeEmptyDirs(dir + "/plugin/skills"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(dir + "/plugin/skills/domain-cli/scripts"); !os.IsNotExist(err) {
+		t.Fatalf("empty scripts dir kept: %v", err)
+	}
+	if err := removeEmptyDirs(dir + "/missing"); err != nil {
+		t.Fatalf("missing root should be fine: %v", err)
 	}
 }
