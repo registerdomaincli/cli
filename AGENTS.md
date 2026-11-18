@@ -130,7 +130,7 @@ TTY detection is on the prompter's reader (Cobra's `In`), **not** `os.Stdin` (`c
 | `install.sh` | Served publicly from `main`; consumes release asset names verbatim |
 | `skills/domain-cli/SKILL.md` | Authored agent rules (human approval, no payment automation) |
 
-Env vars in play: `DOMAIN_CLI_SERVER_URL`, `DOMAIN_CLI_TOKEN`, `DOMAIN_CLI_ENV`, `LC_ALL`/`LC_MESSAGES`/`LANG`, `SSH_CONNECTION`/`SSH_TTY` (suppress browser opening), plus `GITHUB_REPO`/`INSTALL_DIR` and optional `GH_TOKEN`/`GITHUB_TOKEN` for private-repo installs. With no token, `install.sh` uses an authenticated `gh` login when available before falling back to public URLs.
+Env vars in play: `DOMAIN_CLI_SERVER_URL`, `DOMAIN_CLI_TOKEN`, `DOMAIN_CLI_ENV`, `LC_ALL`/`LC_MESSAGES`/`LANG`, `SSH_CONNECTION`/`SSH_TTY` (suppress browser opening), plus `GITHUB_REPO`/`INSTALL_DIR` for `install.sh`, which downloads the public release anonymously and never reads a GitHub token or `gh` login.
 
 ## Runtime/Tooling Preferences
 

@@ -19,6 +19,14 @@ func TestPluginSkillFromRepo(t *testing.T) {
 			t.Errorf("plugin skill still contains %q", banned)
 		}
 	}
+	// The bundled installer must download anonymously: no GitHub token, no
+	// `gh` login, no Authorization header.
+	install := string(outs[1].data)
+	for _, banned := range []string{"gh auth token", "GH_TOKEN", "GITHUB_TOKEN", "Authorization"} {
+		if strings.Contains(install, banned) {
+			t.Errorf("bundled install.sh still contains %q", banned)
+		}
+	}
 	for _, want := range []string{"${CLAUDE_SKILL_DIR}/scripts/install.sh", "## Errors and rate limits"} {
 		if !strings.Contains(skill, want) {
 			t.Errorf("plugin skill lacks %q", want)
