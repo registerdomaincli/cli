@@ -64,16 +64,18 @@ if command -v curl >/dev/null 2>&1; then
 	curl -q -fsSL "$BASE/$ASSET" -o "$TMP/domain-cli" &&
 		curl -q -fsSL "$BASE/$ASSET.sha256" -o "$TMP/$ASSET.sha256" && FETCH_OK=1
 elif command -v wget >/dev/null 2>&1; then
+	# The probes themselves must not load ~/.wgetrc either: the first one
+	# passes --no-config (only a GNU Wget that supports it prints its banner),
+	# and the fallback probe points WGETRC at /dev/null.
 	set --
-	if wget --version 2>/dev/null | grep -q "GNU Wget"; then
+	if wget --no-config --version 2>/dev/null | grep -q "GNU Wget"; then
+		set -- --no-config -e netrc=off
+	elif WGETRC=/dev/null wget --version 2>/dev/null | grep -q "GNU Wget"; then
 		# Fail closed: a GNU wget that cannot skip ~/.wgetrc (older than
 		# 1.17) could send whatever credentials or headers it configures.
-		if ! wget --help 2>/dev/null | grep -q -- "--no-config"; then
-			echo "error: this wget cannot ignore ~/.wgetrc (needs GNU Wget 1.17+)." >&2
-			echo "Install curl, or a newer wget, and re-run." >&2
-			exit 1
-		fi
-		set -- --no-config -e netrc=off
+		echo "error: this wget cannot ignore ~/.wgetrc (needs GNU Wget 1.17+)." >&2
+		echo "Install curl, or a newer wget, and re-run." >&2
+		exit 1
 	fi
 	wget "$@" -q "$BASE/$ASSET" -O "$TMP/domain-cli" &&
 		wget "$@" -q "$BASE/$ASSET.sha256" -O "$TMP/$ASSET.sha256" && FETCH_OK=1
