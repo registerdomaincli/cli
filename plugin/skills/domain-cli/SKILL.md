@@ -121,12 +121,15 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   connector enforces for Claude. Get the exact total right before ordering
   with `--dry-run --json` (the quote's `totalCents`), have the human approve
   it, and place the order straight away. For a **transfer**, `--dry-run`
-  still requires `--auth-code`, so quote it without the code instead, with
-  the SAME currency and discount code the order will use: the MCP `quote`
-  tool (`kind=transfer`, `currency`, `discount_code`) or
+  still requires `--auth-code`, so quote it without the code instead: the
+  MCP `quote` tool (`kind=transfer`, `years=1`, `currency`,
+  `discount_code`) or
   `GET /v1/quote?domain=…&years=1&kind=transfer&currency=<code>&discount=<code>`
-  (see the API section; omit `currency`/`discount` only when the order omits
-  `--currency`/`--discount`). Never silently charge a saved method without the human having
+  (see the API section). Pin the currency explicitly on BOTH sides — the
+  same `currency` on the quote and `--currency <code>` on the transfer —
+  because the CLI can otherwise take one from `DOMAIN_CLI_CURRENCY` or its
+  config while the quote defaults to the server's; pass the same discount
+  code to both, or to neither. Never silently charge a saved method without the human having
   agreed in this conversation; methods are removed in the web panel, not from
   the CLI.
 - **Editing an order is cancel + recreate**: an unpaid order can be dropped
@@ -211,7 +214,8 @@ human to configure a connector and restart.
 - **Endpoint**: `https://registerdomaincli.com/v1/mcp` (MCP over streamable
   HTTP, JSON-RPC; protocol version 2025-06-18).
 - **Auth — prefer OAuth**: connector clients (Claude, Gemini) should run the
-  OAuth flow: any request without a valid token gets an HTTP 401 carrying
+  OAuth flow: any POST to the endpoint without a valid token (any JSON-RPC
+  method, `initialize` included) gets an HTTP 401 carrying
   `WWW-Authenticate: Bearer resource_metadata=…` → protected-resource
   metadata → authorization-server metadata at
   `https://registerdomaincli.com/.well-known/oauth-authorization-server/v1/mcp/oauth`
