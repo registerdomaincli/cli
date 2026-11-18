@@ -35,6 +35,7 @@ RunE ──> app.requireClient() ──> Client.<Endpoint>() ──> Client.do()
 | `cli/i18n/` | Bundle init, locale detection/matching, `T()` |
 | `cli/locales/` | 13 flat JSON bundles + `//go:embed *.json` |
 | `skills/domain-cli/` | Agent-facing usage contract (`SKILL.md`) |
+| `plugin/` | Claude directory plugin bundle: `.claude-plugin/plugin.json`, `.mcp.json` (hosted MCP connector), a byte-identical copy of the skill (CI `plugin` job enforces it) and `LICENSE` |
 | `.github/workflows/` | `ci.yml` (build/vet/test), `release.yml` (5-target tag release) |
 
 Commands are grouped thematically, **not** one file per command: `cmd_account.go` (signup/login/logout/whoami/account), `cmd_order.go` (register/renew/transfer/orders/invoice), `cmd_domains.go` (legal/domains/dns), `cmd_contacts.go` (contacts/billing), `cmd_search.go` (search/tlds).

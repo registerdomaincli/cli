@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "registerdomaincli": {
+      "type": "http",
+      "url": "https://registerdomaincli.com/v1/mcp"
+    }
+  }
+}
