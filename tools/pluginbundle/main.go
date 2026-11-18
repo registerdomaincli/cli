@@ -24,6 +24,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -183,10 +184,22 @@ func main() {
 	check := flag.Bool("check", false, "verify plugin/ is up to date instead of writing it")
 	root := flag.String("root", ".", "repository root")
 	flag.Parse()
-	outs, err := build(*root)
-	if err != nil {
+	if err := run(*root, *check, os.Stderr); err != nil {
 		fmt.Fprintln(os.Stderr, "pluginbundle:", err)
 		os.Exit(1)
+	}
+}
+
+// errStale is returned by a -check run that found plugin/ out of date; the
+// details have already been written to the report writer.
+var errStale = errors.New("plugin/ is stale; run: go run ./tools/pluginbundle")
+
+// run generates plugin/ under root, or with check verifies it without
+// writing anything, reporting each problem to report.
+func run(root string, check bool, report io.Writer) error {
+	outs, err := build(root)
+	if err != nil {
+		return err
 	}
 	stale := false
 	// Nothing but generated files may live under plugin/skills: a leftover
@@ -196,8 +209,8 @@ func main() {
 	for _, o := range outs {
 		want[filepath.Clean(o.path)] = true
 	}
-	skillsDir := filepath.Join(*root, "plugin", "skills")
-	walkErr := filepath.WalkDir(skillsDir, func(p string, d os.DirEntry, err error) error {
+	skillsDir := filepath.Join(root, "plugin", "skills")
+	err = filepath.WalkDir(skillsDir, func(p string, d os.DirEntry, err error) error {
 		if err != nil {
 			// A missing plugin/skills is fine (first generation; -check then
 			// reports the missing SKILL.md). Anything else must not be
@@ -210,61 +223,57 @@ func main() {
 		if d.IsDir() {
 			return nil
 		}
-		rel, err := filepath.Rel(*root, p)
+		rel, err := filepath.Rel(root, p)
 		if err != nil {
 			return err
 		}
 		if want[filepath.Clean(rel)] {
 			return nil
 		}
-		if *check {
-			fmt.Fprintf(os.Stderr, "pluginbundle: unexpected file %s; run: go run ./tools/pluginbundle\n", rel)
+		if check {
+			fmt.Fprintf(report, "pluginbundle: unexpected file %s\n", filepath.ToSlash(rel))
 			stale = true
 			return nil
 		}
 		return os.Remove(p)
 	})
-	if walkErr != nil {
-		fmt.Fprintln(os.Stderr, "pluginbundle:", walkErr)
-		os.Exit(1)
+	if err != nil {
+		return err
 	}
-	if !*check {
+	if !check {
 		if err := removeEmptyDirs(skillsDir); err != nil {
-			fmt.Fprintln(os.Stderr, "pluginbundle:", err)
-			os.Exit(1)
+			return err
 		}
 	}
 	for _, o := range outs {
-		p := filepath.Join(*root, o.path)
-		if *check {
+		p := filepath.Join(root, o.path)
+		if check {
 			got, err := os.ReadFile(p)
 			if err != nil || !bytes.Equal(got, o.data) {
-				fmt.Fprintf(os.Stderr, "pluginbundle: %s is stale; run: go run ./tools/pluginbundle\n", o.path)
+				fmt.Fprintf(report, "pluginbundle: %s is stale\n", o.path)
 				stale = true
 				continue
 			}
 			if st, err := os.Stat(p); err == nil && st.Mode().Perm() != o.mode {
-				fmt.Fprintf(os.Stderr, "pluginbundle: %s has mode %v, want %v\n", o.path, st.Mode().Perm(), o.mode)
+				fmt.Fprintf(report, "pluginbundle: %s has mode %v, want %v\n", o.path, st.Mode().Perm(), o.mode)
 				stale = true
 			}
 			continue
 		}
 		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-			fmt.Fprintln(os.Stderr, "pluginbundle:", err)
-			os.Exit(1)
+			return err
 		}
 		if err := os.WriteFile(p, o.data, o.mode); err != nil {
-			fmt.Fprintln(os.Stderr, "pluginbundle:", err)
-			os.Exit(1)
+			return err
 		}
 		if err := os.Chmod(p, o.mode); err != nil {
-			fmt.Fprintln(os.Stderr, "pluginbundle:", err)
-			os.Exit(1)
+			return err
 		}
 	}
 	if stale {
-		os.Exit(1)
+		return errStale
 	}
+	return nil
 }
 
 // removeEmptyDirs deletes the directories under root that the cleanup left
