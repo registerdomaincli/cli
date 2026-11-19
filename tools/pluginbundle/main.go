@@ -83,16 +83,17 @@ var skillEdits = []edit{
 			"  connector: they enter their email and the emailed 6-digit code on the\n" +
 			"  sign-in page, which also creates the account. Never ask for that code\n" +
 			"  in the chat and never automate mailbox access. If the human wants the\n" +
-			"  CLI signed in too, they run `domain-cli signup` or `domain-cli login`\n" +
-			"  themselves, in their own terminal.\n",
+			"  CLI signed in too, they do it themselves in their own terminal, in two\n" +
+			"  runs: the first sends the code to their email, the second verifies it\n" +
+			"  (`domain-cli login --help` shows both; `signup` works the same way).\n",
 	},
 	{
 		why: "the CLI login is the human's, in their own terminal",
 		old: "- **Signing in again** is `domain-cli login`, the identical two-step flow\n" +
 			"  (`--email`, then `--email` + `--code-file`, exactly as above, without\n" +
 			"  `--json`). It saves",
-		new: "- **Signing in again** is `domain-cli login`, run by the human in their\n" +
-			"  own terminal. It saves",
+		new: "- **Signing in again** is `domain-cli login`, the same two runs done by\n" +
+			"  the human in their own terminal. It saves",
 	},
 	{
 		why: "no token flags in the plugin",
@@ -116,7 +117,7 @@ var skillEdits = []edit{
 	{
 		why: "the login row without the code file",
 		old: "| `domain-cli login [--email <addr>] [--code-file <path>]` | Same two-step flow as `signup` (code through a private file, never `--code`; no `--json` on the verification step); saves the sign-in as a switchable account. |",
-		new: "| `domain-cli login [--email <addr>]` | Signs the CLI in; the human runs it in their own terminal and types the emailed code. Saves the sign-in as a switchable account. |",
+		new: "| `domain-cli login --email <addr>` | Signs the CLI in, in two runs the human does in their own terminal: the first emails a code, the second verifies it (see `domain-cli login --help`). Saves the sign-in as a switchable account. |",
 	},
 	{
 		why: "a stale CLI is the human's to update; the plugin installs nothing",

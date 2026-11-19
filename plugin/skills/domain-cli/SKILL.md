@@ -61,10 +61,11 @@ exits immediately with `missing required flag(s): …` — it never hangs.
   connector: they enter their email and the emailed 6-digit code on the
   sign-in page, which also creates the account. Never ask for that code
   in the chat and never automate mailbox access. If the human wants the
-  CLI signed in too, they run `domain-cli signup` or `domain-cli login`
-  themselves, in their own terminal.
-- **Signing in again** is `domain-cli login`, run by the human in their
-  own terminal. It saves the sign-in as a switchable
+  CLI signed in too, they do it themselves in their own terminal, in two
+  runs: the first sends the code to their email, the second verifies it
+  (`domain-cli login --help` shows both; `signup` works the same way).
+- **Signing in again** is `domain-cli login`, the same two runs done by
+  the human in their own terminal. It saves the sign-in as a switchable
   account: `domain-cli account list` shows the saved sign-ins and
   `domain-cli account switch <email>` moves between them without another code.
 - **Signing out** is `domain-cli logout`: it revokes this machine's token on
@@ -246,7 +247,7 @@ production).
 | `domain-cli dns set <domain> <TYPE> <host> <answer> [--ttl 3600]` | Create a DNS record. |
 | `domain-cli dns delete <domain> <recordID>` | Delete a DNS record by numeric id. |
 | `domain-cli dns ns get <domain>` / `ns set <domain> <ns1> <ns2> [...]` | Show/replace nameservers. |
-| `domain-cli login [--email <addr>]` | Signs the CLI in; the human runs it in their own terminal and types the emailed code. Saves the sign-in as a switchable account. |
+| `domain-cli login --email <addr>` | Signs the CLI in, in two runs the human does in their own terminal: the first emails a code, the second verifies it (see `domain-cli login --help`). Saves the sign-in as a switchable account. |
 | `domain-cli logout` | Revoke this machine's stored token and forget the sign-in. |
 | `domain-cli account list \| switch <email> \| remove <email> \| delete` | List saved sign-ins, switch between them, revoke-and-forget one, or delete the account entirely. |
 
