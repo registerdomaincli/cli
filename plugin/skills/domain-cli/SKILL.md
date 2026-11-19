@@ -57,30 +57,14 @@ describes `domain-cli` applies when it is installed.
 Every command runs without a TTY. When required flags are missing the CLI
 exits immediately with `missing required flag(s): …` — it never hangs.
 
-- **Signup** is two-step (the emailed 6-digit code must be typed by the
-  human — **the agent must NOT automate mailbox access or guess the code**):
-  `domain-cli signup --email user@example.com` (sends the code), then pass
-  the code the human typed through a private file with `--code-file`, never
-  as `--code` (process arguments are readable by other local users):
-  1. Create the file: `umask 077; mktemp "${TMPDIR:-/tmp}/domain-cli-code.XXXXXX"`
-     (prints its path).
-  2. Write the 6 digits into that path with your file-writing tool (for
-     example Claude Code's Write tool), not with a shell command, so the code
-     never appears in a command line.
-  3. Verify and clean up, keeping the verification's exit status:
-     ```sh
-     f=/path/printed/in/step/1
-     domain-cli signup --email user@example.com --code-file "$f"; s=$?; rm -f "$f"; exit $s
-     ```
-  If you only have a shell, `printf '%s\n' 123456 > "$f"` works but puts the
-  code in that shell's arguments for a moment. The code is single-use and
-  expires in 10 minutes, so do that only on a single-user machine;
-  otherwise use the MCP connector's browser sign-in. Do not pass `--json` to
-  this verification step: its JSON output contains the new token, which is
-  already saved privately in the config.
-- **Signing in again** is `domain-cli login`, the identical two-step flow
-  (`--email`, then `--email` + `--code-file`, exactly as above, without
-  `--json`). It saves the sign-in as a switchable
+- **Sign-in** happens in the human's browser through this plugin's
+  connector: they enter their email and the emailed 6-digit code on the
+  sign-in page, which also creates the account. Never ask for that code
+  in the chat and never automate mailbox access. If the human wants the
+  CLI signed in too, they run `domain-cli signup` or `domain-cli login`
+  themselves, in their own terminal.
+- **Signing in again** is `domain-cli login`, run by the human in their
+  own terminal. It saves the sign-in as a switchable
   account: `domain-cli account list` shows the saved sign-ins and
   `domain-cli account switch <email>` moves between them without another code.
 - **Signing out** is `domain-cli logout`: it revokes this machine's token on
@@ -176,12 +160,8 @@ exits immediately with `missing required flag(s): …` — it never hangs.
 - **First run**: pass `--server <url>` or set `DOMAIN_CLI_SERVER_URL`;
   without a TTY the CLI refuses to guess a server.
 - **The server must be https** (plain http is accepted only for localhost).
-  A token saved by `signup` belongs to the server it was saved against:
-  pointing `--server`/`DOMAIN_CLI_SERVER_URL` at a different host fails
-  unless you also pass `--token` explicitly.
-- **Keep secrets off the command line**: `--token-file <path>` and
-  `signup --code-file <path>` read the token and the 6-digit code from a
-  file, where other local users cannot read them out of the process table.
+  A CLI sign-in belongs to the server it was made against: pointing
+  `--server`/`DOMAIN_CLI_SERVER_URL` at a different host fails.
 - **Version currency**: if the tool is already installed, check it is not
   stale — `domain-cli --version`, once per session (not on every message),
   and only re-check after the user installs something or a day has passed.
@@ -196,24 +176,14 @@ exits immediately with `missing required flag(s): …` — it never hangs.
 
 Mobile agent apps (Claude, Gemini) and other environments without a real
 terminal cannot run `domain-cli`. Talk to the hosted MCP server instead —
-same account, same dcl_ token, same API. This plugin bundles it already
-configured, so use it whether or not there is a shell.
+same account, same API. This plugin bundles it already configured, so
+use it whether or not there is a shell.
 
 - **Endpoint**: `https://registerdomaincli.com/v1/mcp` (MCP over streamable
   HTTP, JSON-RPC; protocol version 2025-06-18).
-- **Auth — prefer OAuth**: connector clients (Claude, Gemini) should run the
-  OAuth flow: any POST to the endpoint without a valid token (any JSON-RPC
-  method, `initialize` included) gets an HTTP 401 carrying
-  `WWW-Authenticate: Bearer resource_metadata=…` → protected-resource
-  metadata → authorization-server metadata at
-  `https://registerdomaincli.com/.well-known/oauth-authorization-server/v1/mcp/oauth`
-  → Claude's published client identity (CIMD) or dynamic client registration
-  (`POST /v1/mcp/oauth/register`, public client) → open
-  `/v1/mcp/oauth/authorize` in the human's browser: they sign
-  in with email + the emailed 6-digit code (the same login as the CLI and
-  the panel) → exchange the code (PKCE S256) at `/v1/mcp/oauth/token`. The
-  access token is a normal dcl_ token. No token copying for the human.
-  A static `Authorization: Bearer dcl_…` header keeps working too.
+- **Sign-in**: the first tool call opens the connector's sign-in page in
+  the human's browser (email + the emailed 6-digit code, the same login
+  as the CLI and the web panel). Nothing to configure or copy.
 - **Tools** mirror the CLI: `whoami`, `search_domains` (`tlds`/`limit`
   filters), `list_tlds`, `quote`, `quote_domains` (price several domains in
   one call), `create_order` (`domains[]` buys several domains in ONE
@@ -276,7 +246,7 @@ production).
 | `domain-cli dns set <domain> <TYPE> <host> <answer> [--ttl 3600]` | Create a DNS record. |
 | `domain-cli dns delete <domain> <recordID>` | Delete a DNS record by numeric id. |
 | `domain-cli dns ns get <domain>` / `ns set <domain> <ns1> <ns2> [...]` | Show/replace nameservers. |
-| `domain-cli login [--email <addr>] [--code-file <path>]` | Same two-step flow as `signup` (code through a private file, never `--code`; no `--json` on the verification step); saves the sign-in as a switchable account. |
+| `domain-cli login [--email <addr>]` | Signs the CLI in; the human runs it in their own terminal and types the emailed code. Saves the sign-in as a switchable account. |
 | `domain-cli logout` | Revoke this machine's stored token and forget the sign-in. |
 | `domain-cli account list \| switch <email> \| remove <email> \| delete` | List saved sign-ins, switch between them, revoke-and-forget one, or delete the account entirely. |
 
@@ -312,14 +282,11 @@ instruction naming the domain.
 
 ## Direct API access
 
-Use the MCP connector bundled with this plugin, or the CLI: between them
-they cover the whole API. Never read the CLI's saved token (its
-`config.json`) or any other credential from the user's machine to call
-the API yourself; the connector signs in through OAuth in the human's
-browser, and the CLI uses its own saved session.
+Do not call the HTTP API yourself from this plugin. The bundled MCP
+connector covers it, signed in through the human's browser, and the
+CLI, when installed, keeps its own session.
 
-Signing out is `domain-cli logout`, only when the human asks: it revokes
-this machine's token on the server and clears it from the config.
+Signing the CLI out is `domain-cli logout`, only when the human asks.
 
 ## Errors and rate limits
 
