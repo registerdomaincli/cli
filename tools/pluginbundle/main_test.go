@@ -18,6 +18,13 @@ func TestPluginSkillFromRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	skill := string(outs[0].data)
+	// No credential handling at all: no env-var expansion, no emailed code or
+	// token passing through the agent, no Authorization header.
+	for _, banned := range []string{"${", "$f", "--code-file", "--token", "Authorization", "dcl_", "config.json"} {
+		if strings.Contains(skill, banned) {
+			t.Errorf("plugin skill still handles a credential: contains %q", banned)
+		}
+	}
 	for _, banned := range []string{"install.sh | sh", "config.json\")", "Authorization: Bearer \" + token"} {
 		if strings.Contains(skill, banned) {
 			t.Errorf("plugin skill still contains %q", banned)
